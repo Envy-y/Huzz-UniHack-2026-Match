@@ -5,9 +5,10 @@ import { usePlayer } from '@/hooks/usePlayer'
 import { PageShell } from '@/components/PageShell'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Loader2, CheckCircle } from 'lucide-react'
+import { Loader2, CheckCircle, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { hashColor, initials } from '@/components/LobbyCard'
+import { createSupabaseClient } from '@/lib/supabase'
 
 const SKILL_LEVELS = [1, 2, 3, 4, 5] as const
 const SKILL_LABELS: Record<number, string> = {
@@ -159,6 +160,20 @@ export default function ProfilePage() {
                 ? <><CheckCircle className="h-4 w-4" /> Saved!</>
                 : 'Save Profile'
               }
+            </button>
+
+            {/* Log out */}
+            <button
+              type="button"
+              onClick={async () => {
+                const supabase = createSupabaseClient()
+                await supabase.auth.signOut()
+                router.push('/login')
+              }}
+              className="w-full rounded-2xl py-[14px] text-[15px] font-extrabold text-[#bf1a00] bg-[#ffeaea] transition-all duration-150 active:scale-[0.97] flex items-center justify-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Log Out
             </button>
 
           </form>

@@ -86,4 +86,38 @@ export const paymentRouter = router({
         playerCount,
       }
     }),
+
+  confirmPayment: protectedProcedure
+    .input(z.object({ matchId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      const match = await prisma.match.findUniqueOrThrow({
+        where: { match_id: input.matchId },
+        include: { match_players: true },
+      })
+
+      // Verify caller is a participant
+      const isParticipant = match.match_players.some(
+        (mp) => mp.player_id === ctx.playerId
+      )
+      if (!isParticipant) {
+        throw new TRPCError({ code: 'FORBIDDEN' })
+      }
+
+      // Update match status to Played
+      await prisma.match.update({
+        where: { match_id: input.matchId },
+        data: { match_status: 'Played' },
+      })
+
+      // Delete the lobby now that payment is confirmed
+      // (cascades LobbyPlayers + Notifications)
+      // Match.lobby_id is set to null via onDelete: SetNull
+      if (match.lobby_id) {
+        await prisma.lobby.delete({
+          where: { lobby_id: match.lobby_id },
+        })
+      }
+
+      return { success: true }
+    }),
 })

@@ -50,6 +50,7 @@ model Lobby {
 
   lobby_players LobbyPlayer[]
   notifications Notification[]
+  match         Match?
 }
 
 model LobbyPlayer {
@@ -64,6 +65,7 @@ model LobbyPlayer {
 
 model Match {
   match_id     String    @id @default(uuid())
+  lobby_id     String?   @unique
   location_id  String
   court_number Int?
   start_time   DateTime?
@@ -77,6 +79,7 @@ model Match {
   match_days   String[]
   match_time   String // 'M' | 'A' | 'N'
 
+  lobby         Lobby?        @relation(fields: [lobby_id], references: [lobby_id], onDelete: SetNull)
   location      Location      @relation(fields: [location_id], references: [location_id])
   match_players MatchPlayer[]
 }

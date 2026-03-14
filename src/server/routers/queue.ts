@@ -60,6 +60,11 @@ export const queueRouter = router({
         })
 
         if (allPlayers.length >= matchedLobby.lobby_max_players) {
+          await prisma.lobby.update({
+            where: { lobby_id: matchedLobby.lobby_id },
+            data: { lobby_status: 'Full' },
+          })
+
           const coords = allPlayers
             .filter((lp) => lp.player.player_lat && lp.player.player_long)
             .map((lp) => ({
@@ -69,9 +74,10 @@ export const queueRouter = router({
 
           const venue = await assignVenue(coords)
 
-          // Create match with snapshot fields from the lobby
+          // Create match with lobby_id FK + snapshot fields
           const match = await prisma.match.create({
             data: {
+              lobby_id: matchedLobby.lobby_id,
               location_id: venue.location_id,
               match_status: 'Confirmed',
               match_type: matchedLobby.lobby_match_type,
@@ -85,11 +91,6 @@ export const queueRouter = router({
               },
             },
             include: { location: true, match_players: { include: { player: true } } },
-          })
-
-          // Delete the lobby (cascades LobbyPlayers + Notifications)
-          await prisma.lobby.delete({
-            where: { lobby_id: matchedLobby.lobby_id },
           })
 
           return { status: 'matched' as const, match }
