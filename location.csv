@@ -1,0 +1,11 @@
+id,name,lat,lon,address,scrape_url
+loc-001,Melbourne Sports & Aquatic Centre,-37.8325,144.9525,"30 Aughtie Dr, Albert Park VIC 3206",
+loc-002,MSAC Badminton Centre,-37.8330,144.9530,"30 Aughtie Dr, Albert Park VIC 3206",
+loc-003,Box Hill Badminton Centre,-37.8190,145.1230,"1 Thurston St, Box Hill VIC 3128",
+loc-004,Doncaster Badminton Centre,-37.7830,145.1270,"30 Anderson St, Templestowe VIC 3106",
+loc-005,Knox Badminton Centre,-37.8710,145.2380,"2A Ferntree Gully Rd, Knoxfield VIC 3180",
+loc-006,Springvale Badminton Centre,-37.9480,145.1540,"1 Birdwood Ave, Springvale South VIC 3172",
+loc-007,Monash University Badminton,-37.9110,145.1360,"42 Scenic Blvd, Clayton VIC 3168",
+loc-008,Hawthorn Badminton Centre,-37.8220,145.0340,"5 Grace St, Hawthorn VIC 3122",
+loc-009,Brunswick Badminton Club,-37.7670,144.9600,"90 Albert St, Brunswick VIC 3056",
+loc-010,Footscray Badminton Centre,-37.7990,144.8950,"126 Buckley St, Footscray VIC 3011"
