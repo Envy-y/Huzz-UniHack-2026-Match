@@ -236,6 +236,15 @@ export const lobbiesRouter = router({
           include: { location: true },
         })
 
+        // Notify every player in the lobby
+        await prisma.notification.createMany({
+          data: allPlayers.map((lp) => ({
+            player_id: lp.player_id,
+            lobby_id: input.lobbyId,
+            message: `Your lobby is full! Your court has been booked at ${match.location.location_name}. Tap to complete payment.`,
+          })),
+        })
+
         return { status: 'full' as const, match }
       }
 
