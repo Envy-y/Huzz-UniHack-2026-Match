@@ -1,10 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
-import { createSupabaseClient } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Home, Search, PlusCircle, User, LogOut, Bell } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { Home, Search, PlusCircle, User, Bell } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -31,58 +29,13 @@ function ShuttlecockIcon() {
 }
 
 export function Navbar() {
-  const router   = useRouter()
   const pathname = usePathname()
-  const supabase = createSupabaseClient()
-
-  async function signOut() {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
 
   return (
     <>
-      {/* ── Desktop: white glass sticky navbar ── */}
-      <nav className="hidden md:block sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-lg supports-[backdrop-filter]:bg-white/60">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 transition-all duration-200 hover:scale-105 group">
-              <span className="text-2xl group-hover:animate-float">🏸</span>
-              <span className="font-serif font-black text-xl bg-gradient-to-br from-mint-600 to-mint-800 bg-clip-text text-transparent">
-                Match.
-              </span>
-            </Link>
-
-            <div className="flex items-center gap-1">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname === item.href
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <Button
-                      variant="ghost"
-                      className={cn('gap-2 transition-all duration-200', isActive ? 'bg-mint-50 text-mint-700 font-semibold' : 'text-gray-600 hover:text-mint-600')}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Button>
-                  </Link>
-                )
-              })}
-              <div className="ml-2 pl-2 border-l border-gray-200">
-                <Button variant="ghost" onClick={signOut} className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50">
-                  <LogOut className="h-4 w-4" />
-                  Sign out
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* ── Mobile: mint header (§5) ── */}
+      {/* ── Top header ── */}
       <div
-        className="md:hidden sticky top-0 z-50"
+        className="sticky top-0 z-50"
         style={{ background: 'linear-gradient(90deg, #30d5c8 0%, #1ab5aa 100%)' }}
       >
         <div className="flex h-14 items-center justify-between px-4">
@@ -110,9 +63,9 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* ── Mobile: icon-only bottom tab bar (§8) ── */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur-lg supports-[backdrop-filter]:bg-white/80 shadow-lg">
-        <div className="grid grid-cols-4 h-[72px] pb-2">
+      {/* ── Bottom tab bar ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 backdrop-blur-lg supports-[backdrop-filter]:bg-white/80 shadow-lg">
+        <div className="flex h-[72px] pb-2">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
@@ -120,7 +73,7 @@ export function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex flex-col items-center justify-center gap-1"
+                className="flex flex-1 flex-col items-center justify-center gap-1"
               >
                 <Icon
                   className={cn('h-[26px] w-[26px] transition-colors duration-200', isActive ? 'text-mint-500' : 'text-gray-300')}

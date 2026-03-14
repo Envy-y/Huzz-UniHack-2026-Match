@@ -11,6 +11,12 @@ const updateInput = z.object({
 })
 
 export const playersRouter = router({
+  me: protectedProcedure.query(async ({ ctx }) => {
+    return prisma.player.findUnique({
+      where: { player_id: ctx.playerId },
+    })
+  }),
+
   create: publicProcedure
     .input(
       z.object({

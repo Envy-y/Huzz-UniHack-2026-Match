@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '@/server/trpc'
 import { prisma } from '@/lib/prisma'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { COURT_FEE_CENTS } from '@/types'
 
 export const paymentRouter = router({
@@ -31,7 +31,7 @@ export const paymentRouter = router({
       const playerCount = match.lobby.lobby_players.length
       const splitCents = Math.ceil(COURT_FEE_CENTS / playerCount)
 
-      const session = await stripe.checkout.sessions.create({
+      const session = await getStripe().checkout.sessions.create({
         mode: 'payment',
         line_items: [
           {

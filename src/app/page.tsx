@@ -31,11 +31,23 @@ function LoadingFact() {
   const [fact] = useState(() => FUN_FACTS[Math.floor(Math.random() * FUN_FACTS.length)])
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 flex flex-col items-center gap-6 w-full">
-      {/* Animated shuttlecock */}
+      {/* Animated shuttlecock SVG — mint on white bg */}
       <div className="relative flex items-center justify-center w-24 h-24">
-        <div className="absolute inset-0 rounded-full bg-mint-400/20 animate-ping" style={{ animationDuration: '1.5s' }} />
-        <div className="absolute inset-2 rounded-full bg-mint-400/10 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.3s' }} />
-        <span className="text-5xl animate-float relative z-10">🏸</span>
+        <div className="absolute inset-0 rounded-full bg-[#30d5c8]/15 animate-ping" style={{ animationDuration: '1.5s' }} />
+        <div className="absolute inset-2 rounded-full bg-[#30d5c8]/10 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.3s' }} />
+        <div className="animate-float relative z-10">
+          <svg width="56" height="56" viewBox="0 0 32 32" fill="none">
+            <ellipse cx="16" cy="25" rx="5" ry="4" fill="#14b8a6" opacity="0.9" />
+            <ellipse cx="16" cy="23.5" rx="4" ry="2.5" fill="#30d5c8" opacity="0.7" />
+            <line x1="16" y1="22" x2="10" y2="8"  stroke="#0d9488" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="16" y1="22" x2="13" y2="7"  stroke="#0d9488" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="16" y1="22" x2="16" y2="6"  stroke="#0d9488" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="16" y1="22" x2="19" y2="7"  stroke="#0d9488" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="16" y1="22" x2="22" y2="8"  stroke="#0d9488" strokeWidth="1.2" strokeLinecap="round" />
+            <path d="M10 8 Q13 5 16 6 Q19 5 22 8" stroke="#14b8a6" strokeWidth="1.4" fill="rgba(48,213,200,0.18)" strokeLinecap="round" />
+            <path d="M11.5 13 Q13.5 11 16 12 Q18.5 11 20.5 13" stroke="#30d5c8" strokeWidth="1" fill="none" strokeLinecap="round" />
+          </svg>
+        </div>
       </div>
 
       <p className="text-[13px] font-semibold text-[#0d3d3a]/50 tracking-wide">Finding your match...</p>
@@ -77,15 +89,16 @@ function DateBar({ selected, onSelect, dates }: {
   dates: Date[]
 }) {
   return (
-    <div className="bg-white border-b border-[#eef] overflow-x-auto scrollbar-none flex-shrink-0">
-      <div className="flex gap-1.5 px-4 py-2 min-w-max">
+    <div className="bg-white border-b border-[#eef] overflow-x-auto scrollbar-none flex-shrink-0 snap-x snap-mandatory">
+      <div className="flex gap-1.5 px-2 py-2">
         {dates.map((d, i) => (
           <button
             key={i}
             type="button"
             onClick={() => onSelect(i)}
+            style={{ width: 'calc(33.333vw - 8px)', flexShrink: 0 }}
             className={cn(
-              'flex flex-col items-center min-w-[72px] px-2 py-1.5 rounded-xl transition-all duration-150',
+              'snap-start flex flex-col items-center px-2 py-1.5 rounded-xl transition-all duration-150',
               selected === i ? 'bg-[#30d5c8]' : 'hover:bg-[#f0fafa]'
             )}
           >
@@ -144,7 +157,7 @@ export default function HomePage() {
 
   const handleJoin = (lobbyId: string) => {
     if (!playerId) { router.push('/login'); return }
-    joinMutation.mutate({ lobbyId, playerId })
+    joinMutation.mutate({ lobbyId })
   }
 
   const loading = isLoading || !playerId
