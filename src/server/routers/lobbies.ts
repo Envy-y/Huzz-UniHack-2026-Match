@@ -55,8 +55,17 @@ export const lobbiesRouter = router({
   create: protectedProcedure
     .input(createLobbyInput)
     .mutation(async ({ input, ctx }) => {
-      const player = await prisma.player.findUniqueOrThrow({
+      const player = await prisma.player.upsert({
         where: { player_id: ctx.playerId },
+        update: {},
+        create: {
+          player_id: ctx.playerId,
+          player_fname: 'Player',
+          player_lname: '',
+          player_dob: new Date('2000-01-01'),
+          player_gender: 'Prefer not to say',
+          player_skill: 3,
+        },
       })
 
       const maxPlayers = input.lobby_match_type === 'S' ? 2 : 4
@@ -144,6 +153,20 @@ export const lobbiesRouter = router({
   join: protectedProcedure
     .input(z.object({ lobbyId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
+      // Ensure player row exists (handles accounts created outside /signup)
+      await prisma.player.upsert({
+        where: { player_id: ctx.playerId },
+        update: {},
+        create: {
+          player_id: ctx.playerId,
+          player_fname: 'Player',
+          player_lname: '',
+          player_dob: new Date('2000-01-01'),
+          player_gender: 'Prefer not to say',
+          player_skill: 3,
+        },
+      })
+
       const lobby = await prisma.lobby.findUniqueOrThrow({
         where: { lobby_id: input.lobbyId },
         include: { lobby_players: { include: { player: true } } },
