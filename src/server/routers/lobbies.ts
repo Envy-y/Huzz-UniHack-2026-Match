@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { router, publicProcedure, protectedProcedure } from '@/server/trpc'
 import { prisma } from '@/lib/prisma'
 import { assignVenue } from '@/server/lib/matchmaker'
+import { getRecommendations } from '@/server/lib/recommendations'
 
 const dayEnum = z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
 const timeEnum = z.enum(['M', 'A', 'N'])
@@ -84,55 +85,60 @@ export const lobbiesRouter = router({
   recommendations: protectedProcedure
     .input(z.object({ playerId: z.string().uuid() }))
     .query(async ({ input }) => {
-      const player = await prisma.player.findUniqueOrThrow({
-        where: { player_id: input.playerId },
-      })
+      return getRecommendations(input.playerId)
+    }),
 
-      // Step 1: find past co-player IDs
-      const pastLobbyIds = (
-        await prisma.lobbyPlayer.findMany({
-          where: { player_id: input.playerId },
-          select: { lobby_id: true },
-        })
-      ).map((lp) => lp.lobby_id)
-
-      const pastCoPlayerIds = new Set(
-        (
-          await prisma.lobbyPlayer.findMany({
-            where: {
-              lobby_id: { in: pastLobbyIds },
-              player_id: { not: input.playerId },
-            },
-            select: { player_id: true },
+  search: protectedProcedure
+    .input(
+      z.object({
+        playerId: z.string().uuid(),
+        filters: z
+          .object({
+            matchType: matchTypeEnum.optional(),
+            gameType: gameTypeEnum.optional(),
+            days: z.array(dayEnum).optional(),
+            time: timeEnum.optional(),
+            skillMin: z.number().int().min(1).max(5).optional(),
+            skillMax: z.number().int().min(1).max(5).optional(),
           })
-        ).map((lp) => lp.player_id)
-      )
-
-      // Step 2: fetch all Open lobbies (exclude ones the player is already in)
-      const openLobbies = await prisma.lobby.findMany({
+          .optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      let exactMatches = await prisma.lobby.findMany({
         where: {
           lobby_status: 'Open',
-          lobby_players: { none: { player_id: input.playerId } },
+          ...(input.filters?.matchType && {
+            lobby_match_type: input.filters.matchType,
+          }),
+          ...(input.filters?.gameType && {
+            lobby_game_type: input.filters.gameType,
+          }),
+          ...(input.filters?.time && { lobby_time: input.filters.time }),
+          ...(input.filters?.days?.length && {
+            lobby_days: { hasSome: input.filters.days },
+          }),
+          ...(input.filters?.skillMin !== undefined && {
+            host_level: { gte: input.filters.skillMin },
+          }),
+          ...(input.filters?.skillMax !== undefined && {
+            host_level: { lte: input.filters.skillMax },
+          }),
         },
         include: { lobby_players: { include: { player: true } } },
+        orderBy: { created_at: 'desc' },
+        take: 10,
       })
 
-      // Step 3: score and sort
-      const scored = openLobbies.map((lobby) => {
-        const coPlayerScore = lobby.lobby_players.filter((lp) =>
-          pastCoPlayerIds.has(lp.player_id)
-        ).length
+      // Pad to 4 with recommendations if needed
+      if (exactMatches.length < 4) {
+        const exactIds = new Set(exactMatches.map((l) => l.lobby_id))
+        const recs = await getRecommendations(input.playerId)
+        const padding = recs.filter((r) => !exactIds.has(r.lobby_id))
+        exactMatches = [...exactMatches, ...padding].slice(0, 4)
+      }
 
-        const skillGap = Math.abs(lobby.host_level - player.player_skill)
-
-        return { lobby, coPlayerScore, skillGap }
-      })
-
-      scored.sort(
-        (a, b) => b.coPlayerScore - a.coPlayerScore || a.skillGap - b.skillGap
-      )
-
-      return scored.slice(0, 4).map((s) => s.lobby)
+      return { exactMatches }
     }),
 
   join: protectedProcedure

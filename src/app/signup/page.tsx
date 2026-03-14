@@ -27,7 +27,7 @@ const schema = z.object({
   player_lname: z.string().min(1, 'Last name is required'),
   player_dob: z.string().min(1, 'Date of birth is required'),
   player_gender: z.enum(['Male', 'Female', 'Non-binary', 'Prefer not to say'], {
-    required_error: 'Please select a gender',
+    error: 'Please select a gender',
   }),
   player_skill: z.number().int().min(1).max(5),
   email: z.string().email('Please enter a valid email address'),
