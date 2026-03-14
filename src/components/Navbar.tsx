@@ -15,21 +15,6 @@ const navItems = [
   { href: '/profile', label: 'Profile',    icon: User       },
 ]
 
-function ShuttlecockIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-      <ellipse cx="16" cy="25" rx="5" ry="4" fill="rgba(255,255,255,0.9)" />
-      <ellipse cx="16" cy="23.5" rx="4" ry="2.5" fill="rgba(255,255,255,0.7)" />
-      <line x1="16" y1="22" x2="10" y2="8"  stroke="rgba(255,255,255,0.85)" strokeWidth="1.1" strokeLinecap="round" />
-      <line x1="16" y1="22" x2="13" y2="7"  stroke="rgba(255,255,255,0.85)" strokeWidth="1.1" strokeLinecap="round" />
-      <line x1="16" y1="22" x2="16" y2="6"  stroke="rgba(255,255,255,0.85)" strokeWidth="1.1" strokeLinecap="round" />
-      <line x1="16" y1="22" x2="19" y2="7"  stroke="rgba(255,255,255,0.85)" strokeWidth="1.1" strokeLinecap="round" />
-      <line x1="16" y1="22" x2="22" y2="8"  stroke="rgba(255,255,255,0.85)" strokeWidth="1.1" strokeLinecap="round" />
-      <path d="M10 8 Q13 5 16 6 Q19 5 22 8" stroke="rgba(255,255,255,0.9)" strokeWidth="1.4" fill="rgba(255,255,255,0.18)" strokeLinecap="round" />
-      <path d="M11.5 13 Q13.5 11 16 12 Q18.5 11 20.5 13" stroke="rgba(255,255,255,0.6)" strokeWidth="1" fill="none" strokeLinecap="round" />
-    </svg>
-  )
-}
 
 export function Navbar() {
   const pathname = usePathname()
@@ -45,9 +30,9 @@ export function Navbar() {
         className="sticky top-0 z-50"
         style={{ background: 'linear-gradient(90deg, #30d5c8 0%, #1ab5aa 100%)' }}
       >
-        <div className="flex h-14 items-center justify-between px-4">
+        <div className="flex h-[81px] items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
-            <ShuttlecockIcon />
+            <img src="/match_logo.png" alt="Match logo" className="h-[24px] w-[24px]" />
             <span className="font-serif font-black text-[24px] text-white tracking-[-0.5px]">
               Match<span className="opacity-55">.</span>
             </span>

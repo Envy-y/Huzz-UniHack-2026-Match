@@ -63,40 +63,20 @@ function LoadingFact() {
   )
 }
 
-function HeaderStrip({ count, loading }: { count: number; loading: boolean }) {
-  return (
-    <div
-      style={{ background: 'linear-gradient(90deg, #30d5c8 0%, #1ab5aa 100%)' }}
-      className="px-4 py-3 flex items-center justify-between flex-shrink-0"
-    >
-      {loading ? (
-        <div className="h-4 w-44 bg-white/30 rounded-full animate-pulse" />
-      ) : (
-        <p className="text-white/90 text-[13px] font-semibold">
-          🏸 {count} lobbies near you
-        </p>
-      )}
-      <span className="text-[11px] font-bold text-white/70 bg-white/20 rounded-full px-3 py-1 flex-shrink-0 ml-3">
-        Sorted by recommendations
-      </span>
-    </div>
-  )
-}
-
 function DateBar({ selected, onSelect, dates }: {
   selected: number
   onSelect: (i: number) => void
   dates: Date[]
 }) {
   return (
-    <div className="bg-white border-b border-[#eef] overflow-x-auto scrollbar-none flex-shrink-0 snap-x snap-mandatory">
-      <div className="flex gap-1.5 px-2 py-2">
+    <div className="bg-white border-b border-[#eef] overflow-x-auto scrollbar-none flex-shrink-0 snap-x snap-mandatory scroll-pl-4">
+      <div className="flex gap-1.5 px-4 py-2">
         {dates.map((d, i) => (
           <button
             key={i}
             type="button"
             onClick={() => onSelect(i)}
-            style={{ width: 'calc(33.333vw - 8px)', flexShrink: 0 }}
+            style={{ width: 'calc((100vw - 44px) / 3)', flexShrink: 0 }}
             className={cn(
               'snap-start flex flex-col items-center px-2 py-1.5 rounded-xl transition-all duration-150',
               selected === i ? 'bg-[#30d5c8]' : 'hover:bg-[#f0fafa]'
@@ -164,9 +144,6 @@ export default function HomePage() {
 
   return (
     <PageShell>
-      {/* Mint header strip — always visible */}
-      <HeaderStrip count={lobbies?.length ?? 0} loading={loading} />
-
       {/* Date bar — always visible */}
       <DateBar selected={selectedDate} onSelect={setSelectedDate} dates={dates} />
 
