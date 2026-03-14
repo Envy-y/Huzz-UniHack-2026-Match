@@ -454,7 +454,7 @@ Triggered after a lobby fills and a `Match` row is created.
 
 **Edit Profile (`/profile`)** — `src/app/profile/page.tsx`
 - Displays name, DOB, gender (read-only)
-- Editable: skill level (1–10, with grade labels A+ to D), bio
+- Editable: skill level (1–10), bio
 - Save calls `players.update`
 - Match history section (venue, date, result)
 
@@ -465,12 +465,13 @@ Triggered after a lobby fills and a `Match` row is created.
 ### Shared Components
 
 **LobbyCard.tsx**
-- Lobby ID, game type, player count, fill progress bar
-- Player skill ratings (grade label A+ to D, 1–10)
-- Tags: days, time, objective
-- Venue name if assigned
-- Green highlight for Full/Matched status
-- "Join" button
+- Colour-coded tags: game type (Competitive/Social/Casual) + match type (Singles/Doubles) — always shown, never free text
+- `lobby_desc` shown as host's note below the tags (free text, optional)
+- Player count + fill indicator (e.g. `2 / 4`)
+- Skill level dots (1–10) showing host level and accepted range (±1 Competitive, ±2 Casual, open Social)
+- Venue suburb when assigned (from `Location.location_address`)
+- Slots pill: Open / Almost Full / Full
+- "Join" button (direct join, no approval step)
 
 **VoiceSearchButton.tsx**
 - Mic button using Vapi.ai SDK
