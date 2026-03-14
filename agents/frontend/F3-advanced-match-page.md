@@ -3,6 +3,12 @@
 ## Role
 Build the `/match` page with a Vapi.ai-powered voice search. The user taps a mic button, speaks their lobby query, Vapi transcribes it, and the transcript is sent to `lobbies.search` which returns exact SQL matches padded with recommendations. Results are displayed as `LobbyCard`s.
 
+## Style Reference
+**All visual decisions must follow [`STYLEGUIDE.md`](../../STYLEGUIDE.md).** Key sections:
+- §2 Colour palette — mic button idle: `bg-mint-500`, recording: `bg-red-500 animate-pulse`
+- §6 Lobby Cards — `LobbyCard` component handles all badge/level rendering
+- §9 Page background — `bg-[#f0fafa]` via `PageShell`
+
 ## Dependencies
 - **B7** complete: `lobbies.search` procedure accepts `{ playerId, transcript }`, returns `Lobby[]`
 - **B5** complete: `LobbyCard` component, `lobbies.join` procedure
@@ -99,7 +105,7 @@ export function VoiceSearchButton({ onTranscript, disabled }: Props) {
         className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${
           active
             ? 'bg-red-500 shadow-lg shadow-red-300 animate-pulse'
-            : 'bg-blue-600 hover:bg-blue-700'
+            : 'bg-mint-500 hover:bg-mint-600'
         } disabled:opacity-40`}
       >
         {active ? (

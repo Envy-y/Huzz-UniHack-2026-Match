@@ -3,6 +3,12 @@
 ## Role
 Build the `/payment` page shown after a lobby fills and a `Match` is confirmed. Displays the venue, match details, and each player's fee share. Clicking "Pay" creates a Stripe Checkout Session and redirects the player to Stripe's hosted payment page. Also builds the `/payment/success` confirmation page.
 
+## Style Reference
+**All visual decisions must follow [`STYLEGUIDE.md`](../../STYLEGUIDE.md).** Key sections:
+- §14 Buttons — `Button` shadcn component (mint-500 CTA), no `btn-primary` class
+- §2 Colour palette — fee share text: `text-mint-600`, never `text-blue-600`
+- §9 Page background — `bg-[#f0fafa]` via PageShell
+
 ## Dependencies
 - **B8** complete: `payment.createSession` and `payment.getMatch` procedures, Stripe test mode configured
 - **B2** complete: `usePlayer` hook
@@ -66,9 +72,9 @@ export default function PaymentPage() {
       <PageShell>
         <div className="max-w-md mx-auto px-4 py-16 text-center">
           <p className="text-gray-500">Match not found or access denied.</p>
-          <button type="button" onClick={() => router.push('/')} className="mt-4 btn-primary">
+          <Button type="button" onClick={() => router.push('/')} className="mt-4">
             Go home
-          </button>
+          </Button>
         </div>
       </PageShell>
     )
@@ -120,7 +126,7 @@ export default function PaymentPage() {
           </div>
           <div className="border-t pt-3 flex justify-between font-semibold text-gray-900">
             <span>Your share</span>
-            <span className="text-blue-600">${splitDisplay} AUD</span>
+            <span className="text-mint-600">${splitDisplay} AUD</span>
           </div>
         </div>
 
@@ -138,14 +144,15 @@ export default function PaymentPage() {
         </div>
 
         {/* CTA */}
-        <button
+        <Button
           type="button"
           onClick={() => createSession.mutate({ matchId })}
           disabled={createSession.isPending || !playerId}
-          className="btn-primary w-full text-base py-3"
+          className="w-full text-base"
+          size="lg"
         >
-          {createSession.isPending ? 'Redirecting to payment...' : `Pay $${splitDisplay} AUD`}
-        </button>
+          {createSession.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Redirecting...</> : `Pay $${splitDisplay} AUD`}
+        </Button>
 
         <p className="text-center text-xs text-gray-400">
           Test mode — use card <code className="font-mono">4242 4242 4242 4242</code>, any expiry, any CVC
@@ -182,13 +189,13 @@ export default function PaymentSuccessPage() {
     <PageShell>
       <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
         <div className="text-5xl">🏸</div>
-        <h1 className="text-2xl font-bold text-green-600">Payment confirmed!</h1>
+        <h1 className="text-2xl font-bold text-mint-700">Payment confirmed!</h1>
         <p className="text-gray-500">
           Your court is booked. Check your profile for match details.
         </p>
         <div className="flex gap-3 justify-center mt-6">
-          <Link href="/profile" className="btn-primary">View Match History</Link>
-          <Link href="/"        className="btn-primary bg-gray-200 text-gray-800 hover:bg-gray-300">Home</Link>
+          <Link href="/profile"><Button>View Match History</Button></Link>
+          <Link href="/"><Button variant="outline">Home</Button></Link>
         </div>
       </div>
     </PageShell>

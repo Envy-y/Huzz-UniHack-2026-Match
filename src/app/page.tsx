@@ -1,110 +1,205 @@
 'use client'
 
-import { trpc } from '@/lib/trpc'
-import { usePlayer } from '@/hooks/usePlayer'
-import { LobbyCard } from '@/components/LobbyCard'
-import { PageShell } from '@/components/PageShell'
-import { LoadingGrid } from '@/components/LoadingGrid'
-import { EmptyState } from '@/components/EmptyState'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { trpc }          from '@/lib/trpc'
+import { usePlayer }     from '@/hooks/usePlayer'
+import { LobbyCard }     from '@/components/LobbyCard'
+import type { LobbyWithPlayers } from '@/components/LobbyCard'
+import { LobbyDrawer }   from '@/components/LobbyDrawer'
+import { PageShell }     from '@/components/PageShell'
+import { EmptyState }    from '@/components/EmptyState'
+import { useRouter }     from 'next/navigation'
+import { useMemo, useState } from 'react'
+import { cn }            from '@/lib/utils'
+
+const DAYS   = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const FUN_FACTS = [
+  "Badminton is named after Badminton House in Gloucestershire, England, where it was first played in the 19th century.",
+  "Badminton evolved from an Indian game called \"Poona\" — British officers brought it back to England, where it became the sport we know today.",
+  "Badminton became an official Olympic sport in 1992 at the Barcelona Games, instantly captivating audiences worldwide.",
+  "The fastest recorded badminton smash exceeded 330 km/h (205 mph) — one of the fastest-moving objects in any sport.",
+  "A traditional shuttlecock is made from exactly 16 left-wing goose feathers, each chosen to ensure a balanced and consistent flight.",
+  "Badminton is the world's second most popular sport, with over 220 million players spanning every continent.",
+  "China dominates world badminton with countless Olympic titles, while Denmark leads Europe as its fiercest challenger.",
+  "A full badminton court is 44 feet long — singles use a 17-foot-wide court, while doubles widens to 20 feet.",
+  "To win a game you need 21 points — but if it reaches 20-all, you must pull 2 points ahead to claim the win.",
+  "In a single match, players can cover over 1 km on court, blending explosive speed, agility, and precision under pressure.",
+]
+
+function LoadingFact() {
+  const [fact] = useState(() => FUN_FACTS[Math.floor(Math.random() * FUN_FACTS.length)])
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-10 flex flex-col items-center gap-6 w-full">
+      {/* Animated shuttlecock */}
+      <div className="relative flex items-center justify-center w-24 h-24">
+        <div className="absolute inset-0 rounded-full bg-mint-400/20 animate-ping" style={{ animationDuration: '1.5s' }} />
+        <div className="absolute inset-2 rounded-full bg-mint-400/10 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.3s' }} />
+        <span className="text-5xl animate-float relative z-10">🏸</span>
+      </div>
+
+      <p className="text-[13px] font-semibold text-[#0d3d3a]/50 tracking-wide">Finding your match...</p>
+
+      {/* Fun fact card */}
+      <div className="w-full bg-white rounded-[18px] border border-[rgba(48,213,200,0.20)] shadow-[0_2px_12px_rgba(48,213,200,0.08)] p-5">
+        <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#30d5c8] mb-2.5">
+          🏸 Did you know?
+        </p>
+        <p className="text-[14px] text-[#444] leading-relaxed">{fact}</p>
+      </div>
+    </div>
+  )
+}
+
+function HeaderStrip({ count, loading }: { count: number; loading: boolean }) {
+  return (
+    <div
+      style={{ background: 'linear-gradient(90deg, #30d5c8 0%, #1ab5aa 100%)' }}
+      className="px-4 py-3 flex items-center justify-between flex-shrink-0"
+    >
+      {loading ? (
+        <div className="h-4 w-44 bg-white/30 rounded-full animate-pulse" />
+      ) : (
+        <p className="text-white/90 text-[13px] font-semibold">
+          🏸 {count} lobbies near you
+        </p>
+      )}
+      <span className="text-[11px] font-bold text-white/70 bg-white/20 rounded-full px-3 py-1 flex-shrink-0 ml-3">
+        Sorted by recommendations
+      </span>
+    </div>
+  )
+}
+
+function DateBar({ selected, onSelect, dates }: {
+  selected: number
+  onSelect: (i: number) => void
+  dates: Date[]
+}) {
+  return (
+    <div className="bg-white border-b border-[#eef] overflow-x-auto scrollbar-none flex-shrink-0">
+      <div className="flex gap-1.5 px-4 py-2 min-w-max">
+        {dates.map((d, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onSelect(i)}
+            className={cn(
+              'flex flex-col items-center min-w-[72px] px-2 py-1.5 rounded-xl transition-all duration-150',
+              selected === i ? 'bg-[#30d5c8]' : 'hover:bg-[#f0fafa]'
+            )}
+          >
+            <span className={cn('text-[10px] font-bold uppercase tracking-[0.4px] mb-0.5', selected === i ? 'text-white' : 'text-[#aaa]')}>
+              {DAYS[d.getDay()]}
+            </span>
+            <span className={cn('text-[15px] font-extrabold', selected === i ? 'text-white' : 'text-[#0d3d3a]')}>
+              {d.getDate()} {MONTHS[d.getMonth()]}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 
 export default function HomePage() {
-  const router = useRouter()
+  const router       = useRouter()
   const { playerId } = usePlayer()
-  const [joiningLobbyId, setJoiningLobbyId] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const {
-    data: lobbies,
-    isLoading,
-    refetch,
-  } = trpc.lobbies.recommendations.useQuery(
+  const [selectedDate,  setSelectedDate]  = useState(0)
+  const [selectedLobby, setSelectedLobby] = useState<LobbyWithPlayers | null>(null)
+  const [joiningId,     setJoiningId]     = useState<string | null>(null)
+
+  const dates = useMemo(() => {
+    const today = new Date()
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today)
+      d.setDate(today.getDate() + i)
+      return d
+    })
+  }, [])
+
+  const { data: lobbies, isLoading, refetch } = trpc.lobbies.recommendations.useQuery(
     { playerId: playerId! },
     { enabled: !!playerId }
   )
 
   const joinMutation = trpc.lobbies.join.useMutation({
-    onMutate: (variables) => {
-      setJoiningLobbyId(variables.lobbyId)
-      setSuccessMessage(null)
-    },
+    onMutate:  (v)  => setJoiningId(v.lobbyId),
     onSuccess: (data) => {
+      setJoiningId(null)
+      setSelectedLobby(null)
       if (data.status === 'full' && data.match) {
         router.push(`/payment?matchId=${data.match.match_id}`)
-      } else if (data.status === 'joined') {
-        setSuccessMessage("You've joined! Waiting for more players.")
+      } else {
         refetch()
-      } else if (data.status === 'already_joined') {
-        setSuccessMessage("You're already in this lobby!")
       }
-      setJoiningLobbyId(null)
     },
-    onError: (error) => {
-      setSuccessMessage(null)
-      setJoiningLobbyId(null)
-      alert(error.message)
+    onError: (err) => {
+      setJoiningId(null)
+      alert(err.message)
     },
   })
 
   const handleJoin = (lobbyId: string) => {
-    if (!playerId) {
-      router.push('/login')
-      return
-    }
+    if (!playerId) { router.push('/login'); return }
     joinMutation.mutate({ lobbyId, playerId })
   }
 
-  if (isLoading || !playerId) {
-    return (
-      <PageShell>
-        <LoadingGrid />
-      </PageShell>
-    )
-  }
+  const loading = isLoading || !playerId
 
   return (
     <PageShell>
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-br from-mint-600 to-mint-800 bg-clip-text text-transparent mb-2">
-            Good match today?
-          </h1>
-          <p className="text-gray-600">Recommended lobbies just for you</p>
+      {/* Mint header strip — always visible */}
+      <HeaderStrip count={lobbies?.length ?? 0} loading={loading} />
+
+      {/* Date bar — always visible */}
+      <DateBar selected={selectedDate} onSelect={setSelectedDate} dates={dates} />
+
+      {/* Content */}
+      {loading ? (
+        <LoadingFact />
+      ) : (
+        <div className="max-w-2xl mx-auto px-4 py-3.5 w-full">
+          {/* Section header */}
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-extrabold text-[#0d3d3a]">Lobbies Near You</h2>
+            <button type="button" className="text-xs font-bold text-[#30d5c8]">
+              See All →
+            </button>
+          </div>
+
+          {lobbies && lobbies.length > 0 ? (
+            <div className="flex flex-col gap-2.5">
+              {lobbies.map((lobby) => (
+                <LobbyCard
+                  key={lobby.lobby_id}
+                  lobby={lobby}
+                  onClick={() => setSelectedLobby(lobby)}
+                  highlighted={lobby.lobby_status === 'Full' || lobby.lobby_status === 'Matched'}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No lobbies yet"
+              subtitle="Be the first — create one or find a match with advanced search."
+              action={{ label: 'Create a lobby', href: '/create' }}
+            />
+          )}
         </div>
+      )}
 
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm animate-in fade-in-50 slide-in-from-top-2">
-            {successMessage}
-          </div>
-        )}
-
-        {/* Lobbies Grid */}
-        {lobbies && lobbies.length > 0 ? (
-          <div className="grid gap-4">
-            {lobbies.map((lobby) => (
-              <LobbyCard
-                key={lobby.lobby_id}
-                lobby={lobby}
-                onJoin={handleJoin}
-                highlighted={
-                  lobby.lobby_status === 'Full' || lobby.lobby_status === 'Matched'
-                }
-                isJoining={joiningLobbyId === lobby.lobby_id}
-                disabled={!!joiningLobbyId}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="No lobbies yet"
-            subtitle="Be the first — create one or find a match with advanced search."
-            action={{ label: 'Create a lobby', href: '/create' }}
-          />
-        )}
-      </div>
+      {/* Bottom sheet drawer */}
+      {selectedLobby && (
+        <LobbyDrawer
+          lobby={selectedLobby}
+          onClose={() => setSelectedLobby(null)}
+          onJoin={handleJoin}
+          isJoining={joiningId === selectedLobby.lobby_id}
+        />
+      )}
     </PageShell>
   )
 }

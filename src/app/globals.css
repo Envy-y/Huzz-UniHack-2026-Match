@@ -69,6 +69,10 @@ body {
   animation: float 3s ease-in-out infinite;
 }
 
+/* Scrollbar hide */
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
 /* Utility classes */
 @layer components {
   .input {
