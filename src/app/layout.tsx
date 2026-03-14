@@ -1,4 +1,5 @@
 import { TRPCProvider } from '@/components/TRPCProvider'
+import { LayoutWrapper } from '@/components/LayoutWrapper'
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Huzz — Badminton Matchmaking",
-  description: "Find your perfect badminton match",
+  title: "Match — Badminton Matchmaking",
+  description: "Find your perfect badminton match in Melbourne",
 };
 
 export default function RootLayout({
@@ -28,7 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TRPCProvider>{children}</TRPCProvider>
+        <TRPCProvider>
+          <LayoutWrapper>{children}</LayoutWrapper>
+        </TRPCProvider>
       </body>
     </html>
   );

@@ -31,15 +31,6 @@ export const playersRouter = router({
       })
     }),
 
-  get: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ input }) => {
-      const player = await prisma.player.findUniqueOrThrow({
-        where: { player_id: input.id },
-      })
-      return player
-    }),
-
   update: protectedProcedure
     .input(updateInput)
     .mutation(async ({ input }) => {
@@ -47,27 +38,6 @@ export const playersRouter = router({
       return prisma.player.update({
         where: { player_id: id },
         data,
-      })
-    }),
-
-  matchHistory: protectedProcedure
-    .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ input }) => {
-      // Find all lobby IDs the player is in
-      const lobbyPlayers = await prisma.lobbyPlayer.findMany({
-        where: { player_id: input.id },
-        select: { lobby_id: true },
-      })
-      const lobbyIds = lobbyPlayers.map((lp) => lp.lobby_id)
-
-      // Return matches for those lobbies with venue info
-      return prisma.match.findMany({
-        where: {
-          lobby_id: { in: lobbyIds },
-          match_status: { in: ['Confirmed', 'Played'] },
-        },
-        include: { location: true, lobby: true },
-        orderBy: { created_at: 'desc' },
       })
     }),
 })
