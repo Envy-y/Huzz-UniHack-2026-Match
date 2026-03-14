@@ -1,8 +1,9 @@
 'use client'
 
 import { trpc } from '@/lib/trpc'
-import { X, Bell } from 'lucide-react'
+import { X, Bell, CreditCard } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
 
 type Props = {
   open: boolean
@@ -21,6 +22,7 @@ function timeAgo(date: Date | string) {
 
 export function NotificationDrawer({ open, onClose }: Props) {
   const utils = trpc.useUtils()
+  const router = useRouter()
   const { data: notifications = [], isLoading } = trpc.notifications.list.useQuery(undefined, { enabled: open })
 
   const respond = trpc.notifications.respond.useMutation({
@@ -98,22 +100,52 @@ export function NotificationDrawer({ open, onClose }: Props) {
 
                   {!n.is_read && (
                     <div className="flex gap-2">
-                      <button
-                        type="button"
-                        disabled={respond.isPending}
-                        onClick={() => respond.mutate({ notificationId: n.notification_id, action: 'stay' })}
-                        className="flex-1 py-2 rounded-xl text-[13px] font-bold bg-[#30d5c8] text-white disabled:opacity-50"
-                      >
-                        Stay
-                      </button>
-                      <button
-                        type="button"
-                        disabled={respond.isPending}
-                        onClick={() => respond.mutate({ notificationId: n.notification_id, action: 'leave' })}
-                        className="flex-1 py-2 rounded-xl text-[13px] font-bold bg-[#ffeaea] text-[#bf1a00] disabled:opacity-50"
-                      >
-                        Leave
-                      </button>
+                      {(n.lobby as any)?.match ? (
+                        // Lobby-full notification — Pay Now or Leave
+                        <>
+                          <button
+                            type="button"
+                            disabled={respond.isPending}
+                            onClick={() => {
+                              respond.mutate({ notificationId: n.notification_id, action: 'stay' })
+                              onClose()
+                              router.push(`/payment?matchId=${(n.lobby as any).match.match_id}`)
+                            }}
+                            className="flex-1 py-2 rounded-xl text-[13px] font-bold bg-[#30d5c8] text-white disabled:opacity-50 flex items-center justify-center gap-1.5"
+                          >
+                            <CreditCard className="h-3.5 w-3.5" />
+                            Pay Now
+                          </button>
+                          <button
+                            type="button"
+                            disabled={respond.isPending}
+                            onClick={() => respond.mutate({ notificationId: n.notification_id, action: 'leave' })}
+                            className="flex-1 py-2 rounded-xl text-[13px] font-bold bg-[#ffeaea] text-[#bf1a00] disabled:opacity-50"
+                          >
+                            Leave
+                          </button>
+                        </>
+                      ) : (
+                        // Schedule-change notification — Stay or Leave
+                        <>
+                          <button
+                            type="button"
+                            disabled={respond.isPending}
+                            onClick={() => respond.mutate({ notificationId: n.notification_id, action: 'stay' })}
+                            className="flex-1 py-2 rounded-xl text-[13px] font-bold bg-[#30d5c8] text-white disabled:opacity-50"
+                          >
+                            Stay
+                          </button>
+                          <button
+                            type="button"
+                            disabled={respond.isPending}
+                            onClick={() => respond.mutate({ notificationId: n.notification_id, action: 'leave' })}
+                            className="flex-1 py-2 rounded-xl text-[13px] font-bold bg-[#ffeaea] text-[#bf1a00] disabled:opacity-50"
+                          >
+                            Leave
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
