@@ -1,7 +1,7 @@
 # B8 — Payment Backend
 
 ## Role
-Implement the `payment` tRPC sub-router using Stripe in test mode. When a lobby fills and a `Match` is created (by B6), this agent handles creating a Stripe Checkout Session for each player and exposing the session URL to the frontend payment page.
+Implement the `payment` tRPC sub-router using Stripe in test mode. When a lobby fills and a `Match` is created (by B6), this agent handles creating a Stripe Checkout Session for each player, exposing the session URL to the frontend payment page, and processing payment confirmations via a Stripe webhook.
 
 ## Dependencies
 - **B6** complete: `Match` rows are created by `queue.join` and `lobbies.join`; `match_status = 'Confirmed'` exists in DB
@@ -19,37 +19,41 @@ Create `src/lib/stripe.ts`:
 ```ts
 import Stripe from 'stripe'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
-})
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 ```
+
+Uses the Stripe SDK's default API version (matches the installed `stripe` npm package version).
 
 ### 2. Court Booking Fee Constant
-Add to `src/types.ts` (append — do not overwrite B1's content):
+Already exists in `src/types.ts`:
 
 ```ts
-// Court booking fee in AUD cents (e.g. 2000 = $20.00)
-export const COURT_FEE_CENTS = 2000
+export const COURT_FEE_CENTS = 2000 // $20.00 AUD per booking
 ```
 
-### 3. `payment.createSession`
+No changes needed — value matches spec.
+
+### 3. `payment.createSession` and `payment.getMatch`
 Replace stub in `src/server/routers/payment.ts`:
 
 ```ts
-import { z }                          from 'zod'
+import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '@/server/trpc'
-import { prisma }                     from '@/lib/prisma'
-import { stripe }                     from '@/lib/stripe'
-import { COURT_FEE_CENTS }            from '@/types'
-import { TRPCError }                  from '@trpc/server'
+import { prisma } from '@/lib/prisma'
+import { stripe } from '@/lib/stripe'
+import { COURT_FEE_CENTS } from '@/types'
 
 export const paymentRouter = router({
   createSession: protectedProcedure
     .input(z.object({ matchId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
       const match = await prisma.match.findUniqueOrThrow({
-        where:   { match_id: input.matchId },
-        include: { lobby: { include: { lobby_players: true } }, location: true },
+        where: { match_id: input.matchId },
+        include: {
+          lobby: { include: { lobby_players: true } },
+          location: true,
+        },
       })
 
       // Verify caller is a participant
@@ -57,31 +61,36 @@ export const paymentRouter = router({
         (lp) => lp.player_id === ctx.playerId
       )
       if (!isParticipant) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Not a participant in this match.' })
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Not a participant in this match.',
+        })
       }
 
-      const playerCount  = match.lobby.lobby_players.length
-      const splitCents   = Math.ceil(COURT_FEE_CENTS / playerCount)
+      const playerCount = match.lobby.lobby_players.length
+      const splitCents = Math.ceil(COURT_FEE_CENTS / playerCount)
 
       const session = await stripe.checkout.sessions.create({
-        mode:        'payment',
-        line_items: [{
-          quantity:   1,
-          price_data: {
-            currency:     'aud',
-            unit_amount:  splitCents,
-            product_data: {
-              name:        `Court booking — ${match.location.location_name}`,
-              description: `Your share: 1/${playerCount} of the court fee`,
+        mode: 'payment',
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: 'aud',
+              unit_amount: splitCents,
+              product_data: {
+                name: `Court booking — ${match.location.location_name}`,
+                description: `Your share: 1/${playerCount} of the court fee`,
+              },
             },
           },
-        }],
+        ],
         metadata: {
-          matchId:  match.match_id,
+          matchId: match.match_id,
           playerId: ctx.playerId,
         },
         success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success?matchId=${match.match_id}`,
-        cancel_url:  `${process.env.NEXT_PUBLIC_BASE_URL}/payment?matchId=${match.match_id}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment?matchId=${match.match_id}`,
       })
 
       return { url: session.url!, sessionId: session.id }
@@ -91,10 +100,12 @@ export const paymentRouter = router({
     .input(z.object({ matchId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
       const match = await prisma.match.findUniqueOrThrow({
-        where:   { match_id: input.matchId },
+        where: { match_id: input.matchId },
         include: {
           location: true,
-          lobby: { include: { lobby_players: { include: { player: true } } } },
+          lobby: {
+            include: { lobby_players: { include: { player: true } } },
+          },
         },
       })
 
@@ -107,7 +118,7 @@ export const paymentRouter = router({
       }
 
       const playerCount = match.lobby.lobby_players.length
-      const splitCents  = Math.ceil(COURT_FEE_CENTS / playerCount)
+      const splitCents = Math.ceil(COURT_FEE_CENTS / playerCount)
 
       return {
         match,
@@ -119,14 +130,101 @@ export const paymentRouter = router({
 })
 ```
 
-### 4. Add `NEXT_PUBLIC_BASE_URL` to `.env.example`
-Append to `.env.example`:
+### 4. Stripe Webhook Endpoint
+Create `src/app/api/stripe-webhook/route.ts`:
 
-```bash
-NEXT_PUBLIC_BASE_URL=http://localhost:3000   # change for prod
+When Stripe completes a checkout session, this webhook updates the lobby status to `'Matched'`.
+
+```ts
+import { NextRequest, NextResponse } from 'next/server'
+import { stripe } from '@/lib/stripe'
+import { prisma } from '@/lib/prisma'
+import type Stripe from 'stripe'
+
+export async function POST(req: NextRequest) {
+  const body = await req.text()
+  const signature = req.headers.get('stripe-signature')
+
+  if (!signature) {
+    return NextResponse.json(
+      { error: 'Missing stripe-signature header' },
+      { status: 400 }
+    )
+  }
+
+  let event: Stripe.Event
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    )
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json(
+      { error: `Webhook signature verification failed: ${message}` },
+      { status: 400 }
+    )
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session
+    const matchId = session.metadata?.matchId
+
+    if (matchId) {
+      const match = await prisma.match.findUnique({
+        where: { match_id: matchId },
+      })
+
+      if (match) {
+        await prisma.lobby.update({
+          where: { lobby_id: match.lobby_id },
+          data: { lobby_status: 'Matched' },
+        })
+      }
+    }
+  }
+
+  return NextResponse.json({ received: true })
+}
 ```
 
-### 5. Payment Success Page (stub for F6)
+**Local testing with Stripe CLI:**
+```bash
+stripe listen --forward-to localhost:3000/api/stripe-webhook
+```
+This prints a webhook signing secret — set it as `STRIPE_WEBHOOK_SECRET` in `.env`.
+
+### 5. Environment Variables
+Create `.env.example` with all required vars (no secrets):
+
+```bash
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+DATABASE_URL=
+DIRECT_URL=
+
+# OpenAI
+OPENAI_API_KEY=
+
+# Vapi.ai
+NEXT_PUBLIC_VAPI_PUBLIC_KEY=
+
+# Stripe (use TEST keys only)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# App base URL
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+Add `STRIPE_WEBHOOK_SECRET` and uncomment `NEXT_PUBLIC_BASE_URL` in `.env`.
+
+### 6. Payment Success Page (stub for F6)
 Create `src/app/payment/success/page.tsx` as a minimal stub:
 
 ```tsx
@@ -134,7 +232,9 @@ export default function PaymentSuccessPage() {
   return (
     <main className="p-8 text-center">
       <h1 className="text-2xl font-bold text-green-600">Payment confirmed!</h1>
-      <p className="mt-2 text-gray-600">Your court is booked. See you on the court!</p>
+      <p className="mt-2 text-gray-600">
+        Your court is booked. See you on the court!
+      </p>
     </main>
   )
 }
@@ -142,7 +242,7 @@ export default function PaymentSuccessPage() {
 
 F6 will expand the full payment page UI.
 
-### 6. Stripe Test Card
+### 7. Stripe Test Card
 Use test card `4242 4242 4242 4242` with any future expiry and any CVC. No real charges are made.
 
 ---
@@ -152,22 +252,25 @@ Use test card `4242 4242 4242 4242` with any future expiry and any CVC. No real 
 ```
 src/
 ├── lib/
-│   └── stripe.ts
+│   └── stripe.ts                    (new)
 ├── server/routers/
-│   └── payment.ts           (replaces B3 stub)
-├── app/payment/
-│   └── success/
-│       └── page.tsx         (stub — F6 expands)
-└── types.ts                 (COURT_FEE_CENTS appended)
-.env.example                 (NEXT_PUBLIC_BASE_URL appended)
+│   └── payment.ts                   (replaces B3 stub)
+├── app/
+│   ├── api/stripe-webhook/
+│   │   └── route.ts                 (new — Stripe webhook)
+│   └── payment/success/
+│       └── page.tsx                 (new stub — F6 expands)
+.env                                 (STRIPE_WEBHOOK_SECRET added, BASE_URL uncommented)
+.env.example                         (new — all env vars documented)
 ```
 
 ## Contracts Exposed
 
-| Procedure | Input | Output |
-|-----------|-------|--------|
-| `payment.createSession` | `{ matchId }` | `{ url: string, sessionId: string }` |
-| `payment.getMatch` | `{ matchId }` | `{ match, splitCents, totalCents, playerCount }` |
+| Endpoint | Type | Input | Output |
+|----------|------|-------|--------|
+| `payment.createSession` | tRPC mutation | `{ matchId }` | `{ url: string, sessionId: string }` |
+| `payment.getMatch` | tRPC query | `{ matchId }` | `{ match, splitCents, totalCents, playerCount }` |
+| `POST /api/stripe-webhook` | Next.js route | Stripe event payload | `{ received: true }` |
 
 Frontend usage (F6):
 ```ts
@@ -180,8 +283,33 @@ const session = trpc.payment.createSession.useMutation({
 })
 ```
 
-## Note for F6
+## Payment Flow
+
+```
+Lobby fills (B6)
+      ↓
+Match created (status=Confirmed)
+      ↓
+Player navigates to /payment?matchId=...
+      ↓
+F6 calls payment.getMatch → displays court, fee split
+      ↓
+Player clicks "Pay" → payment.createSession
+      ↓
+Redirect to Stripe Checkout (test mode)
+      ↓
+Player pays with test card 4242 4242 4242 4242
+      ↓
+Stripe redirects to /payment/success?matchId=...
+      ↓
+Stripe webhook fires → POST /api/stripe-webhook
+      ↓
+lobby_status updated to 'Matched'
+```
+
+## Notes for F6
 - Each player must complete payment individually
 - Stripe redirects back to `/payment/success?matchId=...` on success
 - Use Stripe test mode — never real cards in the demo
-- The `match_status` stays `'Confirmed'` regardless of payment for the demo; no webhook required
+- On webhook `checkout.session.completed`, lobby status transitions from `'Full'` → `'Matched'`
+- For local testing, run `stripe listen --forward-to localhost:3000/api/stripe-webhook` to receive webhook events

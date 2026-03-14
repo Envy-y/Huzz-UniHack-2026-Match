@@ -23,12 +23,17 @@ export const playersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      return prisma.player.create({
-        data: {
-          ...input,
-          player_dob: new Date(input.player_dob),
-        },
-      })
+      try {
+        return await prisma.player.create({
+          data: {
+            ...input,
+            player_dob: new Date(input.player_dob),
+          },
+        })
+      } catch (err) {
+        console.error('[players.create] Prisma error:', err)
+        throw err
+      }
     }),
 
   update: protectedProcedure
