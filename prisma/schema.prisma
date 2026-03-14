@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Player {
+  player_id     String        @id @default(uuid())
+  player_fname  String
+  player_lname  String
+  player_dob    DateTime      @db.Date
+  player_gender String
+  player_skill  Int
+  player_desc   String?
+  player_lat    Float?
+  player_long   Float?
+
+  lobby_players LobbyPlayer[]
+}
+
+model Location {
+  location_id          String  @id @default(uuid())
+  lat                  Float
+  long                 Float
+  location_name        String
+  location_address     String
+  location_scrape_link String?
+
+  matches Match[]
+}
+
+model Lobby {
+  lobby_id          String   @id @default(uuid())
+  host_player_id    String
+  host_level        Int
+  lobby_desc        String?
+  lobby_match_type  String   // 'S' | 'D'
+  lobby_game_type   String   // 'Competitive' | 'Social' | 'Casual'
+  lobby_days        String[] // e.g. ['Mon', 'Wed', 'Sat']
+  lobby_time        String   // 'M' | 'A' | 'N'
+  lobby_max_players Int
+  lobby_status      String   @default("Open")
+  created_at        DateTime @default(now())
+
+  lobby_players LobbyPlayer[]
+  match         Match?
+}
+
+model LobbyPlayer {
+  lobby_id  String
+  player_id String
+
+  lobby  Lobby  @relation(fields: [lobby_id], references: [lobby_id])
+  player Player @relation(fields: [player_id], references: [player_id])
+
+  @@id([lobby_id, player_id])
+}
+
+model Match {
+  match_id     String    @id @default(uuid())
+  lobby_id     String    @unique
+  location_id  String
+  court_number Int?
+  start_time   DateTime?
+  end_time     DateTime?
+  match_status String    @default("Confirmed")
+  created_at   DateTime  @default(now())
+
+  lobby    Lobby    @relation(fields: [lobby_id], references: [lobby_id])
+  location Location @relation(fields: [location_id], references: [location_id])
+}
