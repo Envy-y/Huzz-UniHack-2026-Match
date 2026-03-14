@@ -29,17 +29,31 @@ export const playersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      try {
-        return await prisma.player.create({
-          data: {
-            ...input,
-            player_dob: new Date(input.player_dob),
-          },
-        })
-      } catch (err) {
-        console.error('[players.create] Prisma error:', err)
-        throw err
-      }
+      // Use raw SQL to bypass Prisma's FK validation on the pooled connection.
+      // The player_auth_fk constraint is checked at DB level — if the trigger
+      // created the row, this becomes an update; if not, the raw INSERT
+      // with ON CONFLICT handles both cases.
+      const result = await prisma.$queryRaw<Array<Record<string, unknown>>>`
+        INSERT INTO "Player" (
+          player_id, player_fname, player_lname,
+          player_dob, player_gender, player_skill
+        ) VALUES (
+          ${input.player_id}::uuid,
+          ${input.player_fname},
+          ${input.player_lname},
+          ${input.player_dob}::date,
+          ${input.player_gender},
+          ${input.player_skill}
+        )
+        ON CONFLICT (player_id) DO UPDATE SET
+          player_fname  = EXCLUDED.player_fname,
+          player_lname  = EXCLUDED.player_lname,
+          player_dob    = EXCLUDED.player_dob,
+          player_gender = EXCLUDED.player_gender,
+          player_skill  = EXCLUDED.player_skill
+        RETURNING *
+      `
+      return result[0]
     }),
 
   update: protectedProcedure

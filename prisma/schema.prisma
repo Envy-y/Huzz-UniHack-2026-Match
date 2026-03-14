@@ -9,7 +9,7 @@ datasource db {
 }
 
 model Player {
-  player_id     String         @id @default(uuid())
+  player_id     String         @id @db.Uuid
   player_fname  String
   player_lname  String
   player_dob    DateTime       @db.Date
@@ -37,7 +37,7 @@ model Location {
 
 model Lobby {
   lobby_id          String   @id @default(uuid())
-  host_player_id    String
+  host_player_id    String   @db.Uuid
   host_level        Int
   lobby_desc        String?
   lobby_match_type  String
@@ -55,7 +55,7 @@ model Lobby {
 
 model LobbyPlayer {
   lobby_id  String
-  player_id String
+  player_id String @db.Uuid
 
   lobby  Lobby  @relation(fields: [lobby_id], references: [lobby_id], onDelete: Cascade)
   player Player @relation(fields: [player_id], references: [player_id])
@@ -86,7 +86,7 @@ model Match {
 
 model MatchPlayer {
   match_id  String
-  player_id String
+  player_id String @db.Uuid
 
   match  Match  @relation(fields: [match_id], references: [match_id], onDelete: Cascade)
   player Player @relation(fields: [player_id], references: [player_id])
@@ -96,7 +96,7 @@ model MatchPlayer {
 
 model Notification {
   notification_id String   @id @default(uuid())
-  player_id       String
+  player_id       String   @db.Uuid
   lobby_id        String
   message         String
   is_read         Boolean  @default(false)

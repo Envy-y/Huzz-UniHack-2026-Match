@@ -3,9 +3,14 @@ import type { Lobby, LobbyPlayer, Player, Match, Location } from '@prisma/client
 import { MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type LobbyWithPlayers = Lobby & {
-  lobby_players: (LobbyPlayer & { player: Player })[]
-  match?: (Match & { location: Location }) | null
+// tRPC serializes Date → string over the wire; accept both
+export type Serialized<T> = {
+  [K in keyof T]: T[K] extends Date ? Date | string : T[K]
+}
+
+export type LobbyWithPlayers = Serialized<Lobby> & {
+  lobby_players: (Serialized<LobbyPlayer> & { player: Serialized<Player> })[]
+  match?: (Serialized<Match> & { location: Serialized<Location> }) | null
 }
 
 type LobbyCardProps = {

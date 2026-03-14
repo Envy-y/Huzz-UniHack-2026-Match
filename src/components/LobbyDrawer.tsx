@@ -3,7 +3,7 @@ import type { Player } from '@prisma/client'
 import { Button } from '@/components/ui/button'
 import { MapPin, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { type LobbyWithPlayers, hashColor, initials, getAcceptedRange } from './LobbyCard'
+import { type LobbyWithPlayers, type Serialized, hashColor, initials, getAcceptedRange } from './LobbyCard'
 
 // ── helpers ──────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ function ShuttlecockDivider() {
   )
 }
 
-function PlayerCard({ player, isHost }: { player: Player; isHost: boolean }) {
+function PlayerCard({ player, isHost }: { player: Serialized<Player>; isHost: boolean }) {
   const age = getAge(player.player_dob)
   return (
     <div className="bg-[#fafafa] rounded-[14px] p-3 border border-[#f0f0f0]">
