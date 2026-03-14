@@ -120,22 +120,22 @@ STRIPE_SECRET_KEY=
 | player_lname | varchar | |
 | player_dob | date | |
 | player_gender | varchar | |
-| player_skill | int (1–10) | 1=A+ Top Player → 10=D Beginner (see skill guide below) |
+| player_skill | int (1–10) | 1=Beginner → 10=Top Player (see skill guide below) |
 | player_desc | varchar | Optional bio/description set on profile page |
 
 ### Skill Level Guide
 | Level | Grade | Name | Description |
 |---|---|---|---|
-| 1 | A+ | Top Player | Top players in all aspects with no discernible weaknesses. High consistency, very few unforced errors. |
-| 2 | A | Expert | Strong players — steep smashes, strong backhands, deception, good footwork and court awareness. |
-| 3 | A- | Advanced | Mastery of all shots, exceptional technical ability, advanced tactics, creates openings to finish points. |
-| 4 | B+ | Upper Intermediate | Good players with competitive edge, good tactics. Backhand and court position are potential weaknesses. |
-| 5 | B | Intermediate | Sound players, good fight but smashes lack power, backhands weak, shots inconsistent. |
-| 6 | B- | Lower Intermediate | Executes all shots with good control and some tactics, but can be inconsistent and inaccurate. |
-| 7 | C+ | Strong Social Player | 1+ year experience, basic shots and rallies, still working on control/power/footwork. |
-| 8 | C | Good Social Player | Executes and receives all basic shots with basic control and rudimentary tactics. |
-| 9 | C- | Novice | Learning fundamental strokes (serve, smash, drops) and can participate in a rally. |
-| 10 | D | Beginner | No or little prior experience of playing badminton. |
+| 1 | Beginner | No or little prior experience of playing badminton. |
+| 2 | Novice | Learning fundamental strokes (serve, smash, drops) and can participate in a rally. |
+| 3 | Good Social Player | Executes and receives all basic shots with basic control and rudimentary tactics. |
+| 4 | Strong Social Player | 1+ year experience, basic shots and rallies, still working on control/power/footwork. |
+| 5 | Lower Intermediate | Executes all shots with good control and some tactics, but can be inconsistent and inaccurate. |
+| 6 | Intermediate | Sound players, good fight but smashes lack power, backhands weak, shots inconsistent. |
+| 7 | Upper Intermediate | Good players with competitive edge, good tactics. Backhand and court position are potential weaknesses. |
+| 8 | Advanced | Mastery of all shots, exceptional technical ability, advanced tactics, creates openings to finish points. |
+| 9 | Expert | Strong players — steep smashes, strong backhands, deception, good footwork and court awareness. |
+| 10 | Top Player | Top players in all aspects with no discernible weaknesses. High consistency, very few unforced errors. |
 | player_lat | float | Captured via browser Geolocation API on first login |
 | player_long | float | Captured via browser Geolocation API on first login |
 
@@ -216,7 +216,7 @@ Match played → Match (status=Played), Lobby (status=Matched)
 ```ts
 {
   id: string
-  skill: number          // 1–10 (1=A+ Top Player, 10=D Beginner)
+  skill: number          // 1–10 (1=Beginner, 10=Top Player)
   location: { lat: number, lon: number }
   tags: {
     game: 'Singles' | 'Doubles'
@@ -263,7 +263,7 @@ Join the matchmaking queue.
 ```ts
 {
   playerId: string
-  skill: number          // 1–10 (1=A+ Top Player, 10=D Beginner)
+  skill: number          // 1–10 (1=Beginner, 10=Top Player)
   game: 'Singles' | 'Doubles'
   days: ('Mon'|'Tue'|'Wed'|'Thu'|'Fri'|'Sat'|'Sun')[]
   time: 'Morning' | 'Afternoon' | 'Night'

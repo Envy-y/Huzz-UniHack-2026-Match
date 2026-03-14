@@ -36,16 +36,16 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 const skillLevels = [
-  { level: 1,  grade: 'A+', name: 'Top Player',            desc: 'Top players in all aspects with no discernible weaknesses. Plays all shots with high consistency and very few unforced errors.' },
-  { level: 2,  grade: 'A',  name: 'Expert',                desc: 'Strong players able to play the majority of shots well including steep smashes and strong backhands. Uses deception, good footwork, and court awareness.' },
-  { level: 3,  grade: 'A-', name: 'Advanced',              desc: 'Mastery of all shots, exceptional technical ability with advanced tactics and ability to rally, move opponents and create openings.' },
-  { level: 4,  grade: 'B+', name: 'Upper Intermediate',    desc: 'Good players with competitive edge, able to rally and employ good tactics. Backhand and court position are potential weaknesses.' },
-  { level: 5,  grade: 'B',  name: 'Intermediate',          desc: 'Sound players able to put up a good fight and return most shots. Smashes lack power, backhands are weak, and shots can be inconsistent.' },
-  { level: 6,  grade: 'B-', name: 'Lower Intermediate',    desc: 'Ability to execute and receive all badminton shots. Good control with some tactics, but can be inconsistent and inaccurate.' },
-  { level: 7,  grade: 'C+', name: 'Strong Social Player',  desc: 'Typically 1+ year of experience. Able to execute basic shots and sustain rallies. Still working on control, power, and footwork.' },
-  { level: 8,  grade: 'C',  name: 'Good Social Player',    desc: 'Ability to execute and receive all basic shots with basic control and rudimentary use of tactics.' },
-  { level: 9,  grade: 'C-', name: 'Novice',                desc: 'Learning to execute fundamental strokes (low serve, smash, drop shots) and can participate in a competitive rally.' },
-  { level: 10, grade: 'D',  name: 'Beginner',              desc: 'No or little prior experience of playing badminton.' },
+  { level: 1,  name: 'Beginner',            desc: 'No or little prior experience of playing badminton.' },
+  { level: 2,  name: 'Novice',              desc: 'Learning to execute fundamental strokes (low serve, smash, drop shots) and can participate in a competitive rally.' },
+  { level: 3,  name: 'Good Social Player',  desc: 'Ability to execute and receive all basic shots with basic control and rudimentary use of tactics.' },
+  { level: 4,  name: 'Strong Social Player',desc: 'Typically 1+ year of experience. Able to execute basic shots and sustain rallies. Still working on control, power, and footwork.' },
+  { level: 5,  name: 'Lower Intermediate',  desc: 'Ability to execute and receive all badminton shots. Good control with some tactics, but can be inconsistent and inaccurate.' },
+  { level: 6,  name: 'Intermediate',        desc: 'Sound players able to put up a good fight and return most shots. Smashes lack power, backhands are weak, and shots can be inconsistent.' },
+  { level: 7,  name: 'Upper Intermediate',  desc: 'Good players with competitive edge, able to rally and employ good tactics. Backhand and court position are potential weaknesses.' },
+  { level: 8,  name: 'Advanced',            desc: 'Mastery of all shots, exceptional technical ability with advanced tactics and ability to rally, move opponents and create openings.' },
+  { level: 9,  name: 'Expert',              desc: 'Strong players able to play the majority of shots well including steep smashes and strong backhands. Uses deception, good footwork, and court awareness.' },
+  { level: 10, name: 'Top Player',          desc: 'Top players in all aspects with no discernible weaknesses. Plays all shots with high consistency and very few unforced errors.' },
 ]
 
 export default function SignupPage() {
@@ -60,7 +60,7 @@ export default function SignupPage() {
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { player_skill: 9 },
+    defaultValues: { player_skill: 2 },
   })
 
   async function onSubmit(data: FormData) {
@@ -220,20 +220,19 @@ export default function SignupPage() {
               <Label>Skill level</Label>
               <div className="p-4 rounded-xl border-2 border-gray-200 bg-gray-50/50 space-y-3">
                 <div className="grid grid-cols-5 gap-2">
-                  {skillLevels.map(({ level, grade }) => (
+                  {skillLevels.map(({ level }) => (
                     <button
                       key={level}
                       type="button"
                       onClick={() => setValue('player_skill', level)}
                       disabled={isLoading}
-                      className={`h-12 rounded-xl border-2 font-bold text-sm transition-all duration-200 flex flex-col items-center justify-center leading-tight ${
+                      className={`h-12 rounded-xl border-2 font-bold text-lg transition-all duration-200 ${
                         skill === level
                           ? 'bg-mint-500 border-mint-500 text-white shadow-lg shadow-mint-500/30 scale-105'
                           : 'border-gray-300 text-gray-500 hover:border-mint-300 hover:text-mint-500'
                       }`}
                     >
-                      <span className="text-xs opacity-70">{level}</span>
-                      <span>{grade}</span>
+                      {level}
                     </button>
                   ))}
                 </div>
@@ -242,7 +241,6 @@ export default function SignupPage() {
                   return selected ? (
                     <div className="rounded-lg bg-mint-50 border border-mint-200 p-3 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-mint-700">{selected.grade}</span>
                         <span className="font-semibold text-mint-800">{selected.name}</span>
                       </div>
                       <p className="text-xs text-mint-600 leading-relaxed">{selected.desc}</p>
