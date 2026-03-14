@@ -1,9 +1,5 @@
 import Stripe from 'stripe'
 
-<<<<<<< HEAD
-const key = process.env.STRIPE_SECRET_KEY
-export const stripe = key ? new Stripe(key) : null
-=======
 let _stripe: Stripe | null = null
 
 export function getStripe(): Stripe {
@@ -15,4 +11,3 @@ export function getStripe(): Stripe {
   }
   return _stripe
 }
->>>>>>> 75203b0d24f8fb94272ad97b478df8951c042239

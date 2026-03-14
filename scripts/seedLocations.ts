@@ -9,32 +9,36 @@ async function main() {
   const csvPath = path.resolve(process.cwd(), 'location.csv')
   const raw = fs.readFileSync(csvPath, 'utf8')
 
-  const rows = parse(raw, { columns: true, skip_empty_lines: true }) as {
-    id: string
-    name: string
-    lat: string
-    lon: string
-    scrape_url: string
-    address: string
+  const rows = parse(raw, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  }) as {
+    loc_id: string
+    loc_name: string
+    loc_address: string
+    loc_latitude: string
+    loc_longitude: string
+    loc_scrape_url: string
   }[]
 
   for (const row of rows) {
     await prisma.location.upsert({
-      where: { location_id: row.id },
+      where: { location_id: row.loc_id },
       update: {
-        location_name: row.name,
-        location_address: row.address,
-        lat: parseFloat(row.lat),
-        long: parseFloat(row.lon),
-        location_scrape_link: row.scrape_url || null,
+        location_name: row.loc_name,
+        location_address: row.loc_address,
+        lat: parseFloat(row.loc_latitude),
+        long: parseFloat(row.loc_longitude),
+        location_scrape_link: row.loc_scrape_url || null,
       },
       create: {
-        location_id: row.id,
-        location_name: row.name,
-        location_address: row.address,
-        lat: parseFloat(row.lat),
-        long: parseFloat(row.lon),
-        location_scrape_link: row.scrape_url || null,
+        location_id: row.loc_id,
+        location_name: row.loc_name,
+        location_address: row.loc_address,
+        lat: parseFloat(row.loc_latitude),
+        long: parseFloat(row.loc_longitude),
+        location_scrape_link: row.loc_scrape_url || null,
       },
     })
   }

@@ -31,18 +31,7 @@ export const paymentRouter = router({
       const playerCount = match.lobby.lobby_players.length
       const splitCents = Math.ceil(COURT_FEE_CENTS / playerCount)
 
-<<<<<<< HEAD
-      if (!stripe) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Stripe is not configured. Add STRIPE_SECRET_KEY to .env',
-        })
-      }
-
-      const session = await stripe.checkout.sessions.create({
-=======
       const session = await getStripe().checkout.sessions.create({
->>>>>>> 75203b0d24f8fb94272ad97b478df8951c042239
         mode: 'payment',
         line_items: [
           {
