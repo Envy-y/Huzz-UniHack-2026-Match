@@ -54,22 +54,12 @@ export const queueRouter = router({
         })
 
         // Check if lobby is now full
-        const playerCount = await prisma.lobbyPlayer.count({
+        const allPlayers = await prisma.lobbyPlayer.findMany({
           where: { lobby_id: matchedLobby.lobby_id },
+          include: { player: true },
         })
 
-        if (playerCount >= matchedLobby.lobby_max_players) {
-          // Mark lobby full and create Match
-          await prisma.lobby.update({
-            where: { lobby_id: matchedLobby.lobby_id },
-            data: { lobby_status: 'Full' },
-          })
-
-          const allPlayers = await prisma.lobbyPlayer.findMany({
-            where: { lobby_id: matchedLobby.lobby_id },
-            include: { player: true },
-          })
-
+        if (allPlayers.length >= matchedLobby.lobby_max_players) {
           const coords = allPlayers
             .filter((lp) => lp.player.player_lat && lp.player.player_long)
             .map((lp) => ({
@@ -79,16 +69,30 @@ export const queueRouter = router({
 
           const venue = await assignVenue(coords)
 
+          // Create match with snapshot fields from the lobby
           const match = await prisma.match.create({
             data: {
-              lobby_id: matchedLobby.lobby_id,
               location_id: venue.location_id,
               match_status: 'Confirmed',
+              match_type: matchedLobby.lobby_match_type,
+              game_type: matchedLobby.lobby_game_type,
+              match_days: matchedLobby.lobby_days,
+              match_time: matchedLobby.lobby_time,
+              match_players: {
+                create: allPlayers.map((lp) => ({
+                  player_id: lp.player_id,
+                })),
+              },
             },
-            include: { location: true, lobby: true },
+            include: { location: true, match_players: { include: { player: true } } },
           })
 
-          return { status: 'matched' as const, lobby: matchedLobby, match }
+          // Delete the lobby (cascades LobbyPlayers + Notifications)
+          await prisma.lobby.delete({
+            where: { lobby_id: matchedLobby.lobby_id },
+          })
+
+          return { status: 'matched' as const, match }
         }
 
         return { status: 'joined' as const, lobby: matchedLobby, match: null }

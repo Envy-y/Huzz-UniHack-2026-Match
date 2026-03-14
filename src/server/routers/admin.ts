@@ -5,11 +5,13 @@ import { scrapeAvailability } from '@/server/lib/scraper'
 
 export const adminRouter = router({
   reset: publicProcedure.mutation(async () => {
-    // Delete in dependency order (Match → LobbyPlayer → Lobby)
+    // Delete in dependency order
+    await prisma.matchPlayer.deleteMany()
     await prisma.match.deleteMany()
+    await prisma.notification.deleteMany()
     await prisma.lobbyPlayer.deleteMany()
     await prisma.lobby.deleteMany()
-    return { success: true, message: 'All lobbies and matches cleared.' }
+    return { success: true, message: 'All lobbies, matches, and notifications cleared.' }
   }),
 
   scrape: publicProcedure

@@ -64,7 +64,6 @@ function PaymentContent() {
   if (!data) return null
 
   const { match, splitCents, totalCents, playerCount } = data
-  const lobby = match.lobby
 
   return (
     <div className="flex flex-col gap-4">
@@ -77,7 +76,7 @@ function PaymentContent() {
         <div className="flex items-center gap-3 mb-1">
           <span className="text-3xl">🏸</span>
           <div>
-            <p className="text-[18px] font-extrabold tracking-tight">Lobby Full!</p>
+            <p className="text-[18px] font-extrabold tracking-tight">Match Confirmed!</p>
             <p className="text-white/80 text-[13px]">Your court is reserved — pay to confirm your spot.</p>
           </div>
         </div>
@@ -98,12 +97,12 @@ function PaymentContent() {
         <div className="flex items-center gap-3">
           <Users className="h-4 w-4 text-[#30d5c8] flex-shrink-0" />
           <p className="text-[13px] text-[#444] font-semibold">
-            {formatMatchType(lobby.lobby_match_type)} · {lobby.lobby_game_type} · {formatTime(lobby.lobby_time)}
+            {formatMatchType(match.match_type)} · {match.game_type} · {formatTime(match.match_time)}
           </p>
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          {lobby.lobby_days.map((d) => (
+          {match.match_days.map((d: string) => (
             <span
               key={d}
               className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f0fafa] text-[#30d5c8] border border-[#c0efec]/50"

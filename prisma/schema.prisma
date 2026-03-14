@@ -9,10 +9,10 @@ datasource db {
 }
 
 model Player {
-  player_id     String        @id @default(uuid())
+  player_id     String         @id @default(uuid())
   player_fname  String
   player_lname  String
-  player_dob    DateTime      @db.Date
+  player_dob    DateTime       @db.Date
   player_gender String
   player_skill  Int
   player_desc   String?
@@ -20,6 +20,7 @@ model Player {
   player_long   Float?
 
   lobby_players LobbyPlayer[]
+  match_players MatchPlayer[]
   notifications Notification[]
 }
 
@@ -39,16 +40,15 @@ model Lobby {
   host_player_id    String
   host_level        Int
   lobby_desc        String?
-  lobby_match_type  String   // 'S' | 'D'
-  lobby_game_type   String   // 'Competitive' | 'Social' | 'Casual'
-  lobby_days        String[] // e.g. ['Mon', 'Wed', 'Sat']
-  lobby_time        String   // 'M' | 'A' | 'N'
+  lobby_match_type  String
+  lobby_game_type   String
+  lobby_days        String[]
+  lobby_time        String
   lobby_max_players Int
   lobby_status      String   @default("Open")
   created_at        DateTime @default(now())
 
   lobby_players LobbyPlayer[]
-  match         Match?
   notifications Notification[]
 }
 
@@ -56,7 +56,7 @@ model LobbyPlayer {
   lobby_id  String
   player_id String
 
-  lobby  Lobby  @relation(fields: [lobby_id], references: [lobby_id])
+  lobby  Lobby  @relation(fields: [lobby_id], references: [lobby_id], onDelete: Cascade)
   player Player @relation(fields: [player_id], references: [player_id])
 
   @@id([lobby_id, player_id])
@@ -64,7 +64,6 @@ model LobbyPlayer {
 
 model Match {
   match_id     String    @id @default(uuid())
-  lobby_id     String    @unique
   location_id  String
   court_number Int?
   start_time   DateTime?
@@ -72,8 +71,24 @@ model Match {
   match_status String    @default("Confirmed")
   created_at   DateTime  @default(now())
 
-  lobby    Lobby    @relation(fields: [lobby_id], references: [lobby_id])
-  location Location @relation(fields: [location_id], references: [location_id])
+  // Snapshot fields from the lobby (preserved after lobby deletion)
+  match_type   String // 'S' | 'D'
+  game_type    String // 'Competitive' | 'Social' | 'Casual'
+  match_days   String[]
+  match_time   String // 'M' | 'A' | 'N'
+
+  location      Location      @relation(fields: [location_id], references: [location_id])
+  match_players MatchPlayer[]
+}
+
+model MatchPlayer {
+  match_id  String
+  player_id String
+
+  match  Match  @relation(fields: [match_id], references: [match_id], onDelete: Cascade)
+  player Player @relation(fields: [player_id], references: [player_id])
+
+  @@id([match_id, player_id])
 }
 
 model Notification {
@@ -84,6 +99,6 @@ model Notification {
   is_read         Boolean  @default(false)
   created_at      DateTime @default(now())
 
+  lobby  Lobby  @relation(fields: [lobby_id], references: [lobby_id], onDelete: Cascade)
   player Player @relation(fields: [player_id], references: [player_id])
-  lobby  Lobby  @relation(fields: [lobby_id], references: [lobby_id])
 }

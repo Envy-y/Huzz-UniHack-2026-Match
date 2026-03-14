@@ -209,15 +209,12 @@ export const lobbiesRouter = router({
 
       const newCount = lobby.lobby_players.length + 1
       if (newCount >= lobby.lobby_max_players) {
-        await prisma.lobby.update({
-          where: { lobby_id: input.lobbyId },
-          data: { lobby_status: 'Full' },
-        })
-
+        // Fetch all players before deleting the lobby
         const allPlayers = await prisma.lobbyPlayer.findMany({
           where: { lobby_id: input.lobbyId },
           include: { player: true },
         })
+
         const coords = allPlayers
           .filter((lp) => lp.player.player_lat && lp.player.player_long)
           .map((lp) => ({
@@ -227,22 +224,27 @@ export const lobbiesRouter = router({
 
         const venue = await assignVenue(coords)
 
+        // Create match with snapshot fields from the lobby
         const match = await prisma.match.create({
           data: {
-            lobby_id: input.lobbyId,
             location_id: venue.location_id,
             match_status: 'Confirmed',
+            match_type: lobby.lobby_match_type,
+            game_type: lobby.lobby_game_type,
+            match_days: lobby.lobby_days,
+            match_time: lobby.lobby_time,
+            match_players: {
+              create: allPlayers.map((lp) => ({
+                player_id: lp.player_id,
+              })),
+            },
           },
-          include: { location: true },
+          include: { location: true, match_players: { include: { player: true } } },
         })
 
-        // Notify every player in the lobby
-        await prisma.notification.createMany({
-          data: allPlayers.map((lp) => ({
-            player_id: lp.player_id,
-            lobby_id: input.lobbyId,
-            message: `Your lobby is full! Your court has been booked at ${match.location.location_name}. Tap to complete payment.`,
-          })),
+        // Delete the lobby (cascades LobbyPlayers + Notifications)
+        await prisma.lobby.delete({
+          where: { lobby_id: input.lobbyId },
         })
 
         return { status: 'full' as const, match }
@@ -254,7 +256,7 @@ export const lobbiesRouter = router({
   mine: protectedProcedure.query(async ({ ctx }) => {
     return prisma.lobby.findMany({
       where: { host_player_id: ctx.playerId },
-      include: { lobby_players: { include: { player: true } }, match: { include: { location: true } } },
+      include: { lobby_players: { include: { player: true } } },
       orderBy: { created_at: 'desc' },
     })
   }),

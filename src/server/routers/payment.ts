@@ -12,14 +12,14 @@ export const paymentRouter = router({
       const match = await prisma.match.findUniqueOrThrow({
         where: { match_id: input.matchId },
         include: {
-          lobby: { include: { lobby_players: true } },
+          match_players: true,
           location: true,
         },
       })
 
       // Verify caller is a participant
-      const isParticipant = match.lobby.lobby_players.some(
-        (lp) => lp.player_id === ctx.playerId
+      const isParticipant = match.match_players.some(
+        (mp) => mp.player_id === ctx.playerId
       )
       if (!isParticipant) {
         throw new TRPCError({
@@ -28,7 +28,7 @@ export const paymentRouter = router({
         })
       }
 
-      const playerCount = match.lobby.lobby_players.length
+      const playerCount = match.match_players.length
       const splitCents = Math.ceil(COURT_FEE_CENTS / playerCount)
 
       const session = await getStripe().checkout.sessions.create({
@@ -64,21 +64,19 @@ export const paymentRouter = router({
         where: { match_id: input.matchId },
         include: {
           location: true,
-          lobby: {
-            include: { lobby_players: { include: { player: true } } },
-          },
+          match_players: { include: { player: true } },
         },
       })
 
       // Verify caller is a participant
-      const isParticipant = match.lobby.lobby_players.some(
-        (lp) => lp.player_id === ctx.playerId
+      const isParticipant = match.match_players.some(
+        (mp) => mp.player_id === ctx.playerId
       )
       if (!isParticipant) {
         throw new TRPCError({ code: 'FORBIDDEN' })
       }
 
-      const playerCount = match.lobby.lobby_players.length
+      const playerCount = match.match_players.length
       const splitCents = Math.ceil(COURT_FEE_CENTS / playerCount)
 
       return {

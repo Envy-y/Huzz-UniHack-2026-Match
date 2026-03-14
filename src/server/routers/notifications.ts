@@ -7,7 +7,7 @@ export const notificationsRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
     return prisma.notification.findMany({
       where: { player_id: ctx.playerId },
-      include: { lobby: { include: { match: true } } },
+      include: { lobby: true },
       orderBy: { created_at: 'desc' },
       take: 30,
     })
@@ -28,16 +28,9 @@ export const notificationsRouter = router({
       }
 
       if (input.action === 'leave') {
+        // Remove player from lobby
         await prisma.lobbyPlayer.deleteMany({
           where: { lobby_id: notification.lobby_id, player_id: ctx.playerId },
-        })
-        // Delete the match and reopen the lobby so it can be re-filled
-        await prisma.match.deleteMany({
-          where: { lobby_id: notification.lobby_id },
-        })
-        await prisma.lobby.update({
-          where: { lobby_id: notification.lobby_id },
-          data: { lobby_status: 'Open' },
         })
       }
 
