@@ -1,9 +1,10 @@
 import { prisma } from '@/lib/prisma'
 
 export async function getRecommendations(playerId: string, limit = 4) {
-  const player = await prisma.player.findUniqueOrThrow({
+  const player = await prisma.player.findUnique({
     where: { player_id: playerId },
   })
+  if (!player) return []
 
   // Past co-player IDs
   const pastLobbyIds = (
@@ -25,12 +26,9 @@ export async function getRecommendations(playerId: string, limit = 4) {
     ).map((lp) => lp.player_id)
   )
 
-  // Open lobbies the player is NOT in
+  // All open lobbies
   const openLobbies = await prisma.lobby.findMany({
-    where: {
-      lobby_status: 'Open',
-      lobby_players: { none: { player_id: playerId } },
-    },
+    where: { lobby_status: 'Open' },
     include: { lobby_players: { include: { player: true } } },
   })
 
