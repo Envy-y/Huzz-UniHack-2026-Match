@@ -21,7 +21,7 @@ Define at the top of `src/server/routers/players.ts`:
 ```ts
 const updateInput = z.object({
   id:           z.string().uuid(),
-  player_skill: z.number().int().min(1).max(5).optional(),
+  player_skill: z.number().int().min(1).max(10).optional(),
   player_desc:  z.string().max(500).optional(),
   player_lat:   z.number().optional(),
   player_long:  z.number().optional(),

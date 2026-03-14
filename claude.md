@@ -120,8 +120,22 @@ STRIPE_SECRET_KEY=
 | player_lname | varchar | |
 | player_dob | date | |
 | player_gender | varchar | |
-| player_skill | int (1–5) | |
+| player_skill | int (1–10) | 1=A+ Top Player → 10=D Beginner (see skill guide below) |
 | player_desc | varchar | Optional bio/description set on profile page |
+
+### Skill Level Guide
+| Level | Grade | Name | Description |
+|---|---|---|---|
+| 1 | A+ | Top Player | Top players in all aspects with no discernible weaknesses. High consistency, very few unforced errors. |
+| 2 | A | Expert | Strong players — steep smashes, strong backhands, deception, good footwork and court awareness. |
+| 3 | A- | Advanced | Mastery of all shots, exceptional technical ability, advanced tactics, creates openings to finish points. |
+| 4 | B+ | Upper Intermediate | Good players with competitive edge, good tactics. Backhand and court position are potential weaknesses. |
+| 5 | B | Intermediate | Sound players, good fight but smashes lack power, backhands weak, shots inconsistent. |
+| 6 | B- | Lower Intermediate | Executes all shots with good control and some tactics, but can be inconsistent and inaccurate. |
+| 7 | C+ | Strong Social Player | 1+ year experience, basic shots and rallies, still working on control/power/footwork. |
+| 8 | C | Good Social Player | Executes and receives all basic shots with basic control and rudimentary tactics. |
+| 9 | C- | Novice | Learning fundamental strokes (serve, smash, drops) and can participate in a rally. |
+| 10 | D | Beginner | No or little prior experience of playing badminton. |
 | player_lat | float | Captured via browser Geolocation API on first login |
 | player_long | float | Captured via browser Geolocation API on first login |
 
@@ -202,7 +216,7 @@ Match played → Match (status=Played), Lobby (status=Matched)
 ```ts
 {
   id: string
-  skill: number          // 1–5
+  skill: number          // 1–10 (1=A+ Top Player, 10=D Beginner)
   location: { lat: number, lon: number }
   tags: {
     game: 'Singles' | 'Doubles'
@@ -249,7 +263,7 @@ Join the matchmaking queue.
 ```ts
 {
   playerId: string
-  skill: number          // 1–5
+  skill: number          // 1–10 (1=A+ Top Player, 10=D Beginner)
   game: 'Singles' | 'Doubles'
   days: ('Mon'|'Tue'|'Wed'|'Thu'|'Fri'|'Sat'|'Sun')[]
   time: 'Morning' | 'Afternoon' | 'Night'
@@ -440,7 +454,7 @@ Triggered after a lobby fills and a `Match` row is created.
 
 **Edit Profile (`/profile`)** — `src/app/profile/page.tsx`
 - Displays name, DOB, gender (read-only)
-- Editable: skill level (1–5), bio
+- Editable: skill level (1–10, with grade labels A+ to D), bio
 - Save calls `players.update`
 - Match history section (venue, date, result)
 
@@ -452,7 +466,7 @@ Triggered after a lobby fills and a `Match` row is created.
 
 **LobbyCard.tsx**
 - Lobby ID, game type, player count, fill progress bar
-- Player skill ratings (dots 1–5)
+- Player skill ratings (grade label A+ to D, 1–10)
 - Tags: days, time, objective
 - Venue name if assigned
 - Green highlight for Full/Matched status
@@ -497,4 +511,4 @@ npx tsx scripts/seedPlayers.ts     # generate fake players
 - **Stripe test mode** — payment page uses Stripe mock checkout; no real charges; test card `4242 4242 4242 4242`
 - **Scraper fallback** — Axios + Cheerio hits real booking sites; if the site uses JS rendering, fall back to `avl.csv` static data
 - **Melbourne-centric** — court locations seeded from `location.csv`; fake players distributed around Melbourne CBD
-- **Skill distribution for fake players** — 35% skill 3, 25% skill 2, 15% skill 1, 10% skill 4, 15% skill 5
+- **Skill distribution for fake players** — concentrated around levels 5–8 (B to C range) to simulate a realistic social badminton player base

@@ -24,8 +24,8 @@ const listFiltersInput = z
     days: z.array(dayEnum).optional(),
     time: timeEnum.optional(),
     objective: gameTypeEnum.optional(),
-    skillMin: z.number().int().min(1).max(5).optional(),
-    skillMax: z.number().int().min(1).max(5).optional(),
+    skillMin: z.number().int().min(1).max(10).optional(),
+    skillMax: z.number().int().min(1).max(10).optional(),
   })
   .optional()
 
@@ -98,8 +98,8 @@ export const lobbiesRouter = router({
             gameType: gameTypeEnum.optional(),
             days: z.array(dayEnum).optional(),
             time: timeEnum.optional(),
-            skillMin: z.number().int().min(1).max(5).optional(),
-            skillMax: z.number().int().min(1).max(5).optional(),
+            skillMin: z.number().int().min(1).max(10).optional(),
+            skillMax: z.number().int().min(1).max(10).optional(),
           })
           .optional(),
       })

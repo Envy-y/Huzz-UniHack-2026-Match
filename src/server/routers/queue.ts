@@ -8,7 +8,7 @@ export const queueRouter = router({
   join: protectedProcedure
     .input(
       z.object({
-        skill: z.number().int().min(1).max(5),
+        skill: z.number().int().min(1).max(10),
         game: z.enum(['S', 'D']),
         days: z
           .array(z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']))

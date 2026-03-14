@@ -29,19 +29,24 @@ const schema = z.object({
   player_gender: z.enum(['Male', 'Female', 'Non-binary', 'Prefer not to say'], {
     error: 'Please select a gender',
   }),
-  player_skill: z.number().int().min(1).max(5),
+  player_skill: z.number().int().min(1).max(10),
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 type FormData = z.infer<typeof schema>
 
-const skillLabels = {
-  1: 'Beginner',
-  2: 'Intermediate',
-  3: 'Advanced',
-  4: 'Expert',
-  5: 'Pro',
-}
+const skillLevels = [
+  { level: 1,  grade: 'A+', name: 'Top Player',            desc: 'Top players in all aspects with no discernible weaknesses. Plays all shots with high consistency and very few unforced errors.' },
+  { level: 2,  grade: 'A',  name: 'Expert',                desc: 'Strong players able to play the majority of shots well including steep smashes and strong backhands. Uses deception, good footwork, and court awareness.' },
+  { level: 3,  grade: 'A-', name: 'Advanced',              desc: 'Mastery of all shots, exceptional technical ability with advanced tactics and ability to rally, move opponents and create openings.' },
+  { level: 4,  grade: 'B+', name: 'Upper Intermediate',    desc: 'Good players with competitive edge, able to rally and employ good tactics. Backhand and court position are potential weaknesses.' },
+  { level: 5,  grade: 'B',  name: 'Intermediate',          desc: 'Sound players able to put up a good fight and return most shots. Smashes lack power, backhands are weak, and shots can be inconsistent.' },
+  { level: 6,  grade: 'B-', name: 'Lower Intermediate',    desc: 'Ability to execute and receive all badminton shots. Good control with some tactics, but can be inconsistent and inaccurate.' },
+  { level: 7,  grade: 'C+', name: 'Strong Social Player',  desc: 'Typically 1+ year of experience. Able to execute basic shots and sustain rallies. Still working on control, power, and footwork.' },
+  { level: 8,  grade: 'C',  name: 'Good Social Player',    desc: 'Ability to execute and receive all basic shots with basic control and rudimentary use of tactics.' },
+  { level: 9,  grade: 'C-', name: 'Novice',                desc: 'Learning to execute fundamental strokes (low serve, smash, drop shots) and can participate in a competitive rally.' },
+  { level: 10, grade: 'D',  name: 'Beginner',              desc: 'No or little prior experience of playing badminton.' },
+]
 
 export default function SignupPage() {
   const router = useRouter()
@@ -55,7 +60,7 @@ export default function SignupPage() {
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { player_skill: 3 },
+    defaultValues: { player_skill: 9 },
   })
 
   async function onSubmit(data: FormData) {
@@ -214,28 +219,36 @@ export default function SignupPage() {
             <div className="space-y-2">
               <Label>Skill level</Label>
               <div className="p-4 rounded-xl border-2 border-gray-200 bg-gray-50/50 space-y-3">
-                <div className="flex justify-between items-center gap-2">
-                  {[1, 2, 3, 4, 5].map((level) => (
+                <div className="grid grid-cols-5 gap-2">
+                  {skillLevels.map(({ level, grade }) => (
                     <button
                       key={level}
                       type="button"
                       onClick={() => setValue('player_skill', level)}
                       disabled={isLoading}
-                      className={`flex-1 h-12 rounded-xl border-2 font-bold text-sm transition-all duration-200 ${
-                        level <= skill
+                      className={`h-12 rounded-xl border-2 font-bold text-sm transition-all duration-200 flex flex-col items-center justify-center leading-tight ${
+                        skill === level
                           ? 'bg-mint-500 border-mint-500 text-white shadow-lg shadow-mint-500/30 scale-105'
-                          : 'border-gray-300 text-gray-400 hover:border-mint-300 hover:text-mint-500'
+                          : 'border-gray-300 text-gray-500 hover:border-mint-300 hover:text-mint-500'
                       }`}
                     >
-                      {level}
+                      <span className="text-xs opacity-70">{level}</span>
+                      <span>{grade}</span>
                     </button>
                   ))}
                 </div>
-                <div className="text-center">
-                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-100 text-mint-700 text-sm font-medium">
-                    {skillLabels[skill as keyof typeof skillLabels]}
-                  </span>
-                </div>
+                {(() => {
+                  const selected = skillLevels.find((s) => s.level === skill)
+                  return selected ? (
+                    <div className="rounded-lg bg-mint-50 border border-mint-200 p-3 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-mint-700">{selected.grade}</span>
+                        <span className="font-semibold text-mint-800">{selected.name}</span>
+                      </div>
+                      <p className="text-xs text-mint-600 leading-relaxed">{selected.desc}</p>
+                    </div>
+                  ) : null
+                })()}
               </div>
             </div>
 

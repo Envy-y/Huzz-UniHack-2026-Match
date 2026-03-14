@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 const updateInput = z.object({
   id: z.string().uuid(),
-  player_skill: z.number().int().min(1).max(5).optional(),
+  player_skill: z.number().int().min(1).max(10).optional(),
   player_desc: z.string().max(500).optional(),
   player_lat: z.number().optional(),
   player_long: z.number().optional(),
@@ -19,7 +19,7 @@ export const playersRouter = router({
         player_lname: z.string().min(1),
         player_dob: z.string(), // ISO date string
         player_gender: z.string(),
-        player_skill: z.number().int().min(1).max(5),
+        player_skill: z.number().int().min(1).max(10),
       })
     )
     .mutation(async ({ input }) => {
