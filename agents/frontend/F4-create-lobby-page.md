@@ -3,6 +3,12 @@
 ## Role
 Build the `/create` page: a form for creating a new lobby with full tag control (match type, objective, days, time, description). On submit, calls `lobbies.create` and redirects to the home page.
 
+## Style Reference
+**All visual decisions must follow [`STYLEGUIDE.md`](../../STYLEGUIDE.md).** Key sections:
+- §2 Colour palette — selected state: `bg-mint-500 border-mint-500`, hover: `hover:border-mint-400`
+- §14 Buttons — `Button` shadcn component for CTA; pill toggles use custom classes with mint
+- §20 Form validation — Zod + React Hook Form pattern
+
 ## Dependencies
 - **B5** complete: `lobbies.create` procedure, Zod `createLobbyInput` schema
 - **B2** complete: `usePlayer` hook
@@ -121,8 +127,8 @@ export default function CreateLobbyPage() {
                   onClick={() => toggleDay(day)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                     selectedDays.includes(day)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                      ? 'bg-mint-500 text-white border-mint-500'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-mint-400'
                   }`}
                 >
                   {DAY_LABELS[day]}
@@ -159,13 +165,13 @@ export default function CreateLobbyPage() {
             />
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={create.isPending || !playerId}
-            className="btn-primary w-full"
+            className="w-full"
           >
-            {create.isPending ? 'Creating...' : 'Create Lobby'}
-          </button>
+            {create.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating...</> : 'Create Lobby'}
+          </Button>
 
           {create.isError && (
             <p className="text-red-500 text-sm text-center">Something went wrong. Please try again.</p>
@@ -202,8 +208,8 @@ export function ToggleGroup({ label, options, value, onChange }: Props) {
             onClick={() => onChange(opt.value)}
             className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
               value === opt.value
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                ? 'bg-mint-500 text-white border-mint-500'
+                : 'bg-white text-gray-700 border-gray-300 hover:border-mint-400'
             }`}
           >
             {opt.label}

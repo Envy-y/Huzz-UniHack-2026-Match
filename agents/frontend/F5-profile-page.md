@@ -3,6 +3,12 @@
 ## Role
 Build the `/profile` page: display static player info (name, DOB, gender), allow editing of skill level and bio, and show a match history list with venue, date, and result for each past match.
 
+## Style Reference
+**All visual decisions must follow [`STYLEGUIDE.md`](../../STYLEGUIDE.md).** Key sections:
+- §11 Skill selector — 5×2 grid, 1–10, mint-500 selected (same component as signup)
+- §2 Links — `text-mint-600 hover:underline`
+- §14 Buttons — `Button` shadcn component for all CTAs
+
 ## Dependencies
 - **B4** complete: `players.get`, `players.update`, `players.matchHistory` procedures
 - **B2** complete: `usePlayer` hook
@@ -104,16 +110,17 @@ export default function ProfilePage() {
           {/* Skill */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-2">Skill Level</label>
-            <div className="flex gap-2">
-              {[1,2,3,4,5].map((s) => (
+            {/* §11 Skill selector — 5×2 grid, 1–10, mint-500 selected */}
+            <div className="grid grid-cols-5 gap-2">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => setSkill(s)}
-                  className={`w-10 h-10 rounded-full border-2 text-sm font-bold transition-colors ${
-                    s <= currentSkill
-                      ? 'bg-blue-600 border-blue-600 text-white'
-                      : 'border-gray-300 text-gray-400 hover:border-blue-400'
+                  className={`h-12 rounded-xl border-2 font-bold text-lg transition-all duration-200 ${
+                    s === currentSkill
+                      ? 'bg-mint-500 border-mint-500 text-white shadow-lg shadow-mint-500/30 scale-105'
+                      : 'border-gray-300 text-gray-500 hover:border-mint-300 hover:text-mint-500'
                   }`}
                 >
                   {s}
@@ -121,7 +128,7 @@ export default function ProfilePage() {
               ))}
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              1 = Beginner · 3 = Intermediate · 5 = Advanced
+              1 = Beginner · 5 = Intermediate · 10 = Top Player
             </p>
           </div>
 
@@ -139,14 +146,14 @@ export default function ProfilePage() {
             <p className="text-xs text-gray-400 mt-1 text-right">{currentBio.length}/500</p>
           </div>
 
-          <button
+          <Button
             type="button"
             onClick={handleSave}
             disabled={update.isPending}
-            className="btn-primary w-full"
+            className="w-full"
           >
-            {update.isPending ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
-          </button>
+            {update.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</> : saved ? 'Saved!' : 'Save Changes'}
+          </Button>
         </section>
 
         {/* Location */}
@@ -160,7 +167,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={handleUpdateLocation}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-mint-600 hover:underline"
           >
             {player.player_lat ? 'Update location' : 'Set my location'}
           </button>
@@ -210,9 +217,9 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 function MatchStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    Confirmed: 'bg-blue-100 text-blue-700',
+    Confirmed: 'bg-mint-50 text-mint-700',
     Played:    'bg-green-100 text-green-700',
-    Cancelled: 'bg-red-100 text-red-700',
+    Cancelled: 'bg-red-50 text-red-700',
   }
   return (
     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${styles[status] ?? 'bg-gray-100 text-gray-600'}`}>

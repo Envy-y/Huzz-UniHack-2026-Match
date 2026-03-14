@@ -4,7 +4,7 @@ export function LoadingGrid() {
       {[...Array(4)].map((_, i) => (
         <div
           key={i}
-          className="h-48 rounded-2xl bg-gray-200 animate-pulse border border-gray-100"
+          className="h-48 rounded-[18px] bg-mint-50/60 animate-pulse border border-[rgba(48,213,200,0.10)]"
         />
       ))}
     </div>

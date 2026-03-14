@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '@/server/trpc'
 import { prisma } from '@/lib/prisma'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { COURT_FEE_CENTS } from '@/types'
 
 export const paymentRouter = router({
@@ -31,6 +31,7 @@ export const paymentRouter = router({
       const playerCount = match.lobby.lobby_players.length
       const splitCents = Math.ceil(COURT_FEE_CENTS / playerCount)
 
+<<<<<<< HEAD
       if (!stripe) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -39,6 +40,9 @@ export const paymentRouter = router({
       }
 
       const session = await stripe.checkout.sessions.create({
+=======
+      const session = await getStripe().checkout.sessions.create({
+>>>>>>> 75203b0d24f8fb94272ad97b478df8951c042239
         mode: 'payment',
         line_items: [
           {

@@ -6,7 +6,7 @@ type PageShellProps = {
 
 export function PageShell({ children }: PageShellProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f0fafa]">
       <main>{children}</main>
     </div>
   )
