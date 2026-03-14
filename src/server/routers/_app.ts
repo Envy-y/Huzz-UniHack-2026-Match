@@ -4,6 +4,7 @@ import { lobbiesRouter } from './lobbies'
 import { queueRouter } from './queue'
 import { paymentRouter } from './payment'
 import { adminRouter } from './admin'
+import { notificationsRouter } from './notifications'
 
 export const appRouter = router({
   players: playersRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   queue: queueRouter,
   payment: paymentRouter,
   admin: adminRouter,
+  notifications: notificationsRouter,
 })
 
 export type AppRouter = typeof appRouter

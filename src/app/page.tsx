@@ -178,8 +178,8 @@ export default function HomePage() {
           {/* Section header */}
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-extrabold text-[#0d3d3a]">Lobbies Near You</h2>
-            <button type="button" className="text-xs font-bold text-[#30d5c8]">
-              See All →
+            <button type="button" className="text-xs font-bold text-[#30d5c8]" onClick={() => router.push('/my-lobbies')}>
+              View my lobbies →
             </button>
           </div>
 

@@ -20,6 +20,7 @@ model Player {
   player_long   Float?
 
   lobby_players LobbyPlayer[]
+  notifications Notification[]
 }
 
 model Location {
@@ -48,6 +49,7 @@ model Lobby {
 
   lobby_players LobbyPlayer[]
   match         Match?
+  notifications Notification[]
 }
 
 model LobbyPlayer {
@@ -72,4 +74,16 @@ model Match {
 
   lobby    Lobby    @relation(fields: [lobby_id], references: [lobby_id])
   location Location @relation(fields: [location_id], references: [location_id])
+}
+
+model Notification {
+  notification_id String   @id @default(uuid())
+  player_id       String
+  lobby_id        String
+  message         String
+  is_read         Boolean  @default(false)
+  created_at      DateTime @default(now())
+
+  player Player @relation(fields: [player_id], references: [player_id])
+  lobby  Lobby  @relation(fields: [lobby_id], references: [lobby_id])
 }

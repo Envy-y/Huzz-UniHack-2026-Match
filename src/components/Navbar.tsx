@@ -4,6 +4,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Search, PlusCircle, User, Bell } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useState } from 'react'
+import { trpc } from '@/lib/trpc'
+import { NotificationDrawer } from '@/components/NotificationDrawer'
 
 const navItems = [
   { href: '/',        label: 'Home',       icon: Home       },
@@ -30,6 +33,10 @@ function ShuttlecockIcon() {
 
 export function Navbar() {
   const pathname = usePathname()
+  const [notifOpen, setNotifOpen] = useState(false)
+
+  const { data: notifs = [] } = trpc.notifications.list.useQuery(undefined, { refetchInterval: 30000 })
+  const unreadCount = notifs.filter((n: any) => !n.is_read).length
 
   return (
     <>
@@ -54,10 +61,11 @@ export function Navbar() {
             </button>
             <button
               type="button"
+              onClick={() => setNotifOpen(true)}
               className="relative w-9 h-9 rounded-full bg-white/20 flex items-center justify-center"
             >
               <Bell className="h-[17px] w-[17px] text-white" strokeWidth={2.5} />
-              <span className="absolute top-[7px] right-[7px] w-[7px] h-[7px] bg-[#ff3b30] rounded-full border-[1.5px] border-[#30d5c8]" />
+              <span className={cn('absolute top-[7px] right-[7px] w-[7px] h-[7px] bg-[#ff3b30] rounded-full border-[1.5px] border-[#30d5c8]', unreadCount === 0 && 'hidden')} />
             </button>
           </div>
         </div>
@@ -85,6 +93,8 @@ export function Navbar() {
           })}
         </div>
       </div>
+
+      <NotificationDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
     </>
   )
 }

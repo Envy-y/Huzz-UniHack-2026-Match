@@ -68,6 +68,19 @@ export const lobbiesRouter = router({
         },
       })
 
+      const existingLobby = await prisma.lobby.findFirst({
+        where: {
+          host_player_id: ctx.playerId,
+          lobby_status: { in: ['Open', 'Full'] },
+        },
+      })
+      if (existingLobby) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You already have an active lobby. Your current lobby must be completed or cancelled before creating a new one.',
+        })
+      }
+
       const maxPlayers = input.lobby_match_type === 'S' ? 2 : 4
 
       const lobby = await prisma.lobby.create({
@@ -227,5 +240,56 @@ export const lobbiesRouter = router({
       }
 
       return { status: 'joined' as const, match: null }
+    }),
+
+  mine: protectedProcedure.query(async ({ ctx }) => {
+    return prisma.lobby.findMany({
+      where: { host_player_id: ctx.playerId },
+      include: { lobby_players: { include: { player: true } }, match: { include: { location: true } } },
+      orderBy: { created_at: 'desc' },
+    })
+  }),
+
+  update: protectedProcedure
+    .input(z.object({
+      lobbyId: z.string().uuid(),
+      lobby_days: z.array(dayEnum).min(1).optional(),
+      lobby_time: timeEnum.optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const lobby = await prisma.lobby.findUniqueOrThrow({
+        where: { lobby_id: input.lobbyId },
+        include: { lobby_players: true },
+      })
+
+      if (lobby.host_player_id !== ctx.playerId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the host can edit the lobby.' })
+      }
+
+      const updated = await prisma.lobby.update({
+        where: { lobby_id: input.lobbyId },
+        data: {
+          ...(input.lobby_days && { lobby_days: input.lobby_days }),
+          ...(input.lobby_time && { lobby_time: input.lobby_time }),
+        },
+      })
+
+      // Notify all other members
+      const otherPlayers = lobby.lobby_players.filter((lp) => lp.player_id !== ctx.playerId)
+      if (otherPlayers.length > 0) {
+        const timeLabel = (t: string) => t === 'M' ? 'Morning' : t === 'A' ? 'Afternoon' : 'Night'
+        const days = input.lobby_days ?? lobby.lobby_days
+        const time = input.lobby_time ?? lobby.lobby_time
+        const msg = `The host updated the lobby schedule to ${days.join(', ')} – ${timeLabel(time)}. Would you like to stay or leave?`
+        await prisma.notification.createMany({
+          data: otherPlayers.map((lp) => ({
+            player_id: lp.player_id,
+            lobby_id: input.lobbyId,
+            message: msg,
+          })),
+        })
+      }
+
+      return updated
     }),
 })

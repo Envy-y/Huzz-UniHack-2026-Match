@@ -26,9 +26,12 @@ export async function getRecommendations(playerId: string, limit = 4) {
     ).map((lp) => lp.player_id)
   )
 
-  // All open lobbies
+  // All open lobbies (exclude the player's own)
   const openLobbies = await prisma.lobby.findMany({
-    where: { lobby_status: 'Open' },
+    where: {
+      lobby_status: 'Open',
+      host_player_id: { not: playerId },
+    },
     include: { lobby_players: { include: { player: true } } },
   })
 
