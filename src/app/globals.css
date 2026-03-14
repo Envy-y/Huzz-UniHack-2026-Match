@@ -1,8 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafafa;
+  --foreground: #0f172a;
+  --mint-50: #f0fdfa;
+  --mint-100: #ccfbf1;
+  --mint-200: #99f6e4;
+  --mint-300: #5de2e7;
+  --mint-400: #2dd4bf;
+  --mint-500: #14b8a6;
+  --mint-600: #0d9488;
+  --mint-700: #0f766e;
+  --mint-800: #115e59;
+  --mint-900: #134e4a;
 }
 
 @theme inline {
@@ -10,17 +20,70 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Mint Blue accent colors */
+  --color-mint-50: var(--mint-50);
+  --color-mint-100: var(--mint-100);
+  --color-mint-200: var(--mint-200);
+  --color-mint-300: var(--mint-300);
+  --color-mint-400: var(--mint-400);
+  --color-mint-500: var(--mint-500);
+  --color-mint-600: var(--mint-600);
+  --color-mint-700: var(--mint-700);
+  --color-mint-800: var(--mint-800);
+  --color-mint-900: var(--mint-900);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* Smooth animations */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right, transparent 0%, var(--mint-100) 50%, transparent 100%);
+  background-size: 1000px 100%;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Utility classes */
+@layer components {
+  .input {
+    @apply flex h-11 w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm transition-all duration-200 placeholder:text-gray-400 focus:border-mint-500 focus:outline-none focus:ring-4 focus:ring-mint-500/10 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-mint-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-mint-500/20 transition-all duration-200 hover:bg-mint-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mint-500 focus-visible:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full bg-mint-100 px-3 py-1 text-xs font-medium text-mint-700;
+  }
+
+  .card {
+    @apply rounded-2xl border border-gray-100 bg-white shadow-xl shadow-gray-200/50;
+  }
 }

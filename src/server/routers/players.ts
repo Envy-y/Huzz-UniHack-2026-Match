@@ -23,4 +23,22 @@ export const playersRouter = router({
         },
       })
     }),
+
+  update: publicProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        player_skill: z.number().int().min(1).max(5).optional(),
+        player_desc: z.string().optional(),
+        player_lat: z.number().optional(),
+        player_long: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input
+      return prisma.player.update({
+        where: { player_id: id },
+        data,
+      })
+    }),
 })
