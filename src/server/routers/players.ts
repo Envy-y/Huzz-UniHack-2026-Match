@@ -1,7 +1,14 @@
-// Stub — B4 will own this file and add .get, .update, .matchHistory
 import { z } from 'zod'
-import { router, publicProcedure } from '@/server/trpc'
+import { router, publicProcedure, protectedProcedure } from '@/server/trpc'
 import { prisma } from '@/lib/prisma'
+
+const updateInput = z.object({
+  id: z.string().uuid(),
+  player_skill: z.number().int().min(1).max(5).optional(),
+  player_desc: z.string().max(500).optional(),
+  player_lat: z.number().optional(),
+  player_long: z.number().optional(),
+})
 
 export const playersRouter = router({
   create: publicProcedure
@@ -24,16 +31,8 @@ export const playersRouter = router({
       })
     }),
 
-  update: publicProcedure
-    .input(
-      z.object({
-        id: z.string().uuid(),
-        player_skill: z.number().int().min(1).max(5).optional(),
-        player_desc: z.string().optional(),
-        player_lat: z.number().optional(),
-        player_long: z.number().optional(),
-      })
-    )
+  update: protectedProcedure
+    .input(updateInput)
     .mutation(async ({ input }) => {
       const { id, ...data } = input
       return prisma.player.update({
